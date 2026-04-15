@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cursos | KEYLON</title>
+  <link rel="stylesheet" href="./assets/css/layout.css" />
+  <link rel="stylesheet" href="./assets/css/components.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="sidebar-brand">KEYLON</div>
+      <nav class="sidebar-nav">
+        <a href="./dashboard.html">Dashboard</a>
+        <a href="./alunos.html">Alunos</a>
+        <a href="./cursos.html" class="active">Cursos</a>
+        <a href="./turmas.html">Turmas</a>
+      </nav>
+    </aside>
+
+    <div class="main-content">
+      <header class="topbar">
+        <div>
+          <h1>Cursos</h1>
+          <p>Gestão de cursos</p>
+        </div>
+        <div class="topbar-actions">
+          <span id="user-name">Utilizador</span>
+          <button id="logout-btn" class="btn btn-secondary">Sair</button>
+        </div>
+      </header>
+
+      <main class="page-content">
+        <section class="card">
+          <div class="section-header">
+            <input
+              type="text"
+              id="search-cursos"
+              class="input"
+              placeholder="Pesquisar cursos..."
+            />
+            <button id="btn-novo-curso" class="btn btn-primary">Novo curso</button>
+          </div>
+
+          <div id="curso-form-container" class="hidden form-panel">
+            <form id="curso-form" class="form-grid">
+              <input type="hidden" id="curso-id" />
+
+              <div class="form-group">
+                <label for="curso-nome">Nome</label>
+                <input id="curso-nome" class="input" type="text" required />
+              </div>
+
+              <div class="form-group">
+                <label for="curso-codigo">Código</label>
+                <input id="curso-codigo" class="input" type="text" />
+              </div>
+
+              <div class="form-group">
+                <label for="curso-carga-horaria">Carga horária</label>
+                <input id="curso-carga-horaria" class="input" type="number" min="0" value="0" />
+              </div>
+
+              <div class="form-group">
+                <label for="curso-duracao-meses">Duração (meses)</label>
+                <input id="curso-duracao-meses" class="input" type="number" min="0" value="0" />
+              </div>
+
+              <div class="form-group full-width">
+                <label for="curso-descricao">Descrição</label>
+                <textarea id="curso-descricao" class="input" rows="4"></textarea>
+              </div>
+
+              <div class="form-group">
+                <label for="curso-status">Status</label>
+                <select id="curso-status" class="input">
+                  <option value="ativo">Ativo</option>
+                  <option value="inativo">Inativo</option>
+                </select>
+              </div>
+
+              <div class="form-actions full-width">
+                <button type="submit" class="btn btn-primary">Guardar</button>
+                <button type="button" id="btn-cancelar-curso" class="btn btn-secondary">Cancelar</button>
+              </div>
+            </form>
+          </div>
+
+          <div class="table-responsive">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Nome</th>
+                  <th>Código</th>
+                  <th>Carga horária</th>
+                  <th>Duração</th>
+                  <th>Status</th>
+                  <th>Ações</th>
+                </tr>
+              </thead>
+              <tbody id="cursos-table-body"></tbody>
+            </table>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <script type="module" src="./assets/js/app.js"></script>
+</body>
+</html>
