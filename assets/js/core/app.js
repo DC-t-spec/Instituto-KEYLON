@@ -5,6 +5,7 @@ import { initStudentsPage } from "../modules/alunos.js";
 async function requireAuth() {
   const { data, error } = await supabase.auth.getSession();
 
+  
   if (error) {
     console.error("Erro ao verificar sessão:", error.message);
     window.location.href = "./index.html";
