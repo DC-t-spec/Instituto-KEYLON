@@ -1,5 +1,6 @@
 import { supabase } from "../config/supabase.js";
 import { initDashboardPage } from "../modules/dashboard.js";
+import { initStudentsPage } from "../modules/alunos.js";
 
 async function requireAuth() {
   const { data, error } = await supabase.auth.getSession();
@@ -51,8 +52,14 @@ async function initApp() {
     window.location.href = "./index.html";
   });
 
-  if (window.location.pathname.includes("dashboard.html")) {
+  const path = window.location.pathname;
+
+  if (path.includes("dashboard.html")) {
     await initDashboardPage();
+  }
+
+  if (path.includes("alunos.html")) {
+    await initStudentsPage(session.user.id);
   }
 }
 
