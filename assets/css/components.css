@@ -167,3 +167,63 @@
   text-align: center !important;
   color: var(--text-soft) !important;
 }
+
+.btn-secondary {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+.panel-header-inline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.action-inline {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.btn-sm {
+  padding: 8px 12px;
+  border-radius: 10px;
+  font-size: 13px;
+}
+
+.btn-edit {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 28px;
+  padding: 0 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.badge-blue {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.badge-green {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.badge-amber {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.badge-slate {
+  background: #e2e8f0;
+  color: #334155;
+}
