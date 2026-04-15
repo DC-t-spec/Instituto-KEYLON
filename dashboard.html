@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>KEYLON | Dashboard</title>
+
+  <link rel="stylesheet" href="./assets/css/tokens.css" />
+  <link rel="stylesheet" href="./assets/css/base.css" />
+  <link rel="stylesheet" href="./assets/css/layout.css" />
+  <link rel="stylesheet" href="./assets/css/components.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <span class="brand-badge">KEYLON</span>
+        <h2>Instituto</h2>
+      </div>
+
+      <nav class="sidebar-nav">
+        <a class="nav-link active" href="./dashboard.html">Dashboard</a>
+        <a class="nav-link is-disabled" href="#">Alunos</a>
+        <a class="nav-link is-disabled" href="#">Cursos</a>
+        <a class="nav-link is-disabled" href="#">Turmas</a>
+        <a class="nav-link is-disabled" href="#">Cobranças</a>
+        <a class="nav-link is-disabled" href="#">Pagamentos</a>
+        <a class="nav-link is-disabled" href="#">Dívidas</a>
+      </nav>
+
+      <button id="logout-btn" class="btn btn-ghost sidebar-logout">
+        Terminar sessão
+      </button>
+    </aside>
+
+    <div class="app-main">
+      <header class="topbar">
+        <div>
+          <h1>Dashboard</h1>
+          <p class="page-subtitle">Visão geral administrativa e financeira</p>
+        </div>
+
+        <div class="topbar-user">
+          <span id="user-name">Utilizador</span>
+        </div>
+      </header>
+
+      <main class="page-content">
+        <section class="stats-grid">
+          <article class="stat-card">
+            <span class="stat-label">Total de alunos</span>
+            <strong id="total-students" class="stat-value">--</strong>
+          </article>
+
+          <article class="stat-card">
+            <span class="stat-label">Alunos activos</span>
+            <strong id="active-students" class="stat-value">--</strong>
+          </article>
+
+          <article class="stat-card">
+            <span class="stat-label">Bolseiros</span>
+            <strong id="scholarship-students" class="stat-value">--</strong>
+          </article>
+
+          <article class="stat-card">
+            <span class="stat-label">Pagantes</span>
+            <strong id="payer-students" class="stat-value">--</strong>
+          </article>
+
+          <article class="stat-card">
+            <span class="stat-label">Turmas activas</span>
+            <strong id="active-classes" class="stat-value">--</strong>
+          </article>
+
+          <article class="stat-card">
+            <span class="stat-label">Cursos activos</span>
+            <strong id="active-courses" class="stat-value">--</strong>
+          </article>
+
+          <article class="stat-card stat-card-highlight">
+            <span class="stat-label">Dívida total</span>
+            <strong id="total-debt" class="stat-value">--</strong>
+          </article>
+
+          <article class="stat-card stat-card-highlight">
+            <span class="stat-label">Recebido este mês</span>
+            <strong id="received-this-month" class="stat-value">--</strong>
+          </article>
+        </section>
+
+        <section class="panel-grid">
+          <article class="panel">
+            <div class="panel-header">
+              <h3>Alunos com maior dívida</h3>
+            </div>
+            <div class="table-wrap">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Aluno</th>
+                    <th>Curso</th>
+                    <th>Turma</th>
+                    <th>Dívida</th>
+                  </tr>
+                </thead>
+                <tbody id="top-debtors-body">
+                  <tr>
+                    <td colspan="4" class="empty-cell">A carregar...</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </article>
+
+          <article class="panel">
+            <div class="panel-header">
+              <h3>Cobranças vencidas</h3>
+            </div>
+            <div class="table-wrap">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Aluno</th>
+                    <th>Cobrança</th>
+                    <th>Vencimento</th>
+                    <th>Saldo</th>
+                  </tr>
+                </thead>
+                <tbody id="overdue-body">
+                  <tr>
+                    <td colspan="4" class="empty-cell">A carregar...</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </article>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <script type="module" src="./assets/js/core/app.js"></script>
+</body>
+</html>
