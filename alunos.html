@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>KEYLON | Alunos</title>
+
+  <link rel="stylesheet" href="./assets/css/tokens.css" />
+  <link rel="stylesheet" href="./assets/css/base.css" />
+  <link rel="stylesheet" href="./assets/css/layout.css" />
+  <link rel="stylesheet" href="./assets/css/components.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <span class="brand-badge">KEYLON</span>
+        <h2>Instituto</h2>
+      </div>
+
+      <nav class="sidebar-nav">
+        <a class="nav-link" href="./dashboard.html">Dashboard</a>
+        <a class="nav-link active" href="./alunos.html">Alunos</a>
+        <a class="nav-link is-disabled" href="#">Cursos</a>
+        <a class="nav-link is-disabled" href="#">Turmas</a>
+        <a class="nav-link is-disabled" href="#">Cobranças</a>
+        <a class="nav-link is-disabled" href="#">Pagamentos</a>
+        <a class="nav-link is-disabled" href="#">Dívidas</a>
+      </nav>
+
+      <button id="logout-btn" class="btn btn-ghost sidebar-logout">
+        Terminar sessão
+      </button>
+    </aside>
+
+    <div class="app-main">
+      <header class="topbar">
+        <div>
+          <h1>Alunos</h1>
+          <p class="page-subtitle">Cadastro, edição e consulta de estudantes</p>
+        </div>
+
+        <div class="topbar-user">
+          <span id="user-name">Utilizador</span>
+        </div>
+      </header>
+
+      <main class="page-content">
+        <section class="split-layout">
+          <article class="panel">
+            <div class="panel-header">
+              <h3 id="student-form-title">Novo aluno</h3>
+            </div>
+
+            <div class="panel-body">
+              <form id="student-form" class="form-grid">
+                <input type="hidden" id="student-id" />
+
+                <div class="form-group">
+                  <label for="full_name">Nome completo</label>
+                  <input id="full_name" name="full_name" type="text" required />
+                </div>
+
+                <div class="form-group">
+                  <label for="student_number">Número do aluno</label>
+                  <input id="student_number" name="student_number" type="text" placeholder="deixa vazio para automático" />
+                </div>
+
+                <div class="form-group">
+                  <label for="gender">Sexo</label>
+                  <select id="gender" name="gender">
+                    <option value="">Selecionar</option>
+                    <option value="Masculino">Masculino</option>
+                    <option value="Feminino">Feminino</option>
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <label for="birth_date">Data de nascimento</label>
+                  <input id="birth_date" name="birth_date" type="date" />
+                </div>
+
+                <div class="form-group">
+                  <label for="phone">Telefone</label>
+                  <input id="phone" name="phone" type="text" />
+                </div>
+
+                <div class="form-group">
+                  <label for="email">Email</label>
+                  <input id="email" name="email" type="email" />
+                </div>
+
+                <div class="form-group">
+                  <label for="document_type">Tipo de documento</label>
+                  <select id="document_type" name="document_type">
+                    <option value="">Selecionar</option>
+                    <option value="BI">BI</option>
+                    <option value="Passaporte">Passaporte</option>
+                    <option value="Cartão de eleitor">Cartão de eleitor</option>
+                    <option value="Outro">Outro</option>
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <label for="document_number">Número do documento</label>
+                  <input id="document_number" name="document_number" type="text" />
+                </div>
+
+                <div class="form-group form-group-full">
+                  <label for="address">Morada</label>
+                  <input id="address" name="address" type="text" />
+                </div>
+
+                <div class="form-group">
+                  <label for="course_id">Curso</label>
+                  <select id="course_id" name="course_id">
+                    <option value="">Selecionar curso</option>
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <label for="class_id">Turma</label>
+                  <select id="class_id" name="class_id">
+                    <option value="">Selecionar turma</option>
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <label for="financial_type">Tipo financeiro</label>
+                  <select id="financial_type" name="financial_type" required>
+                    <option value="payer">Pagante</option>
+                    <option value="scholarship">Bolseiro</option>
+                    <option value="partial">Parcial</option>
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <label for="scholarship_type">Bolsa</label>
+                  <select id="scholarship_type" name="scholarship_type" required>
+                    <option value="none">Nenhuma</option>
+                    <option value="full">Completa</option>
+                    <option value="partial">Parcial</option>
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <label for="status">Estado</label>
+                  <select id="status" name="status" required>
+                    <option value="active">Activo</option>
+                    <option value="inactive">Inactivo</option>
+                    <option value="suspended">Suspenso</option>
+                    <option value="dropped">Desistente</option>
+                    <option value="completed">Concluído</option>
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <label for="enrolled_at">Data de entrada</label>
+                  <input id="enrolled_at" name="enrolled_at" type="date" />
+                </div>
+
+                <div class="form-group form-group-full">
+                  <label for="scholarship_notes">Observações da bolsa</label>
+                  <textarea id="scholarship_notes" name="scholarship_notes" rows="3"></textarea>
+                </div>
+
+                <div class="form-actions form-group-full">
+                  <button type="submit" class="btn btn-primary" id="save-student-btn">
+                    Guardar aluno
+                  </button>
+
+                  <button type="button" class="btn btn-secondary" id="reset-student-btn">
+                    Limpar
+                  </button>
+                </div>
+
+                <p id="student-form-message" class="form-message form-group-full"></p>
+              </form>
+            </div>
+          </article>
+
+          <article class="panel">
+            <div class="panel-header panel-header-inline">
+              <h3>Lista de alunos</h3>
+
+              <div class="toolbar">
+                <input
+                  type="text"
+                  id="student-search"
+                  placeholder="Pesquisar por nome ou nº do aluno"
+                  class="search-input"
+                />
+              </div>
+            </div>
+
+            <div class="table-wrap">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Nº</th>
+                    <th>Nome</th>
+                    <th>Curso</th>
+                    <th>Turma</th>
+                    <th>Tipo</th>
+                    <th>Estado</th>
+                    <th>Ações</th>
+                  </tr>
+                </thead>
+                <tbody id="students-table-body">
+                  <tr>
+                    <td colspan="7" class="empty-cell">A carregar alunos...</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </article>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <script type="module" src="./assets/js/core/app.js"></script>
+</body>
+</html>
