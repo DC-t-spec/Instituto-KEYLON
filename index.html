@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>KEYLON | Login</title>
+
+  <link rel="stylesheet" href="./assets/css/tokens.css" />
+  <link rel="stylesheet" href="./assets/css/base.css" />
+  <link rel="stylesheet" href="./assets/css/layout.css" />
+  <link rel="stylesheet" href="./assets/css/components.css" />
+</head>
+<body class="auth-body">
+  <main class="auth-page">
+    <section class="auth-card">
+      <div class="brand-block">
+        <span class="brand-badge">KEYLON</span>
+        <h1>Painel Administrativo</h1>
+        <p>Gestão académica e financeira do instituto.</p>
+      </div>
+
+      <form id="login-form" class="auth-form">
+        <div class="form-group">
+          <label for="email">Email</label>
+          <input id="email" name="email" type="email" placeholder="admin@keylon.com" required />
+        </div>
+
+        <div class="form-group">
+          <label for="password">Palavra-passe</label>
+          <input id="password" name="password" type="password" placeholder="********" required />
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block">
+          Entrar
+        </button>
+
+        <p id="auth-message" class="form-message"></p>
+      </form>
+    </section>
+  </main>
+
+  <script type="module" src="./assets/js/core/auth.js"></script>
+</body>
+</html>
