@@ -1,11 +1,12 @@
 import { supabase } from "../config/supabase.js";
 import { initDashboardPage } from "../modules/dashboard.js";
 import { initStudentsPage } from "../modules/alunos.js";
+import { initCoursesPage } from "../modules/cursos.js";
+import { initClassesPage } from "../modules/turmas.js";
 
 async function requireAuth() {
   const { data, error } = await supabase.auth.getSession();
 
-  
   if (error) {
     console.error("Erro ao verificar sessão:", error.message);
     window.location.href = "./index.html";
@@ -61,6 +62,14 @@ async function initApp() {
 
   if (path.includes("alunos.html")) {
     await initStudentsPage(session.user.id);
+  }
+
+  if (path.includes("cursos.html")) {
+    await initCoursesPage(session.user.id);
+  }
+
+  if (path.includes("turmas.html")) {
+    await initClassesPage(session.user.id);
   }
 }
 
