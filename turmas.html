@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Turmas | KEYLON</title>
+  <link rel="stylesheet" href="./assets/css/layout.css" />
+  <link rel="stylesheet" href="./assets/css/components.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="sidebar-brand">KEYLON</div>
+      <nav class="sidebar-nav">
+        <a href="./dashboard.html">Dashboard</a>
+        <a href="./alunos.html">Alunos</a>
+        <a href="./cursos.html">Cursos</a>
+        <a href="./turmas.html" class="active">Turmas</a>
+      </nav>
+    </aside>
+
+    <div class="main-content">
+      <header class="topbar">
+        <div>
+          <h1>Turmas</h1>
+          <p>Gestão de turmas</p>
+        </div>
+        <div class="topbar-actions">
+          <span id="user-name">Utilizador</span>
+          <button id="logout-btn" class="btn btn-secondary">Sair</button>
+        </div>
+      </header>
+
+      <main class="page-content">
+        <section class="card">
+          <div class="section-header">
+            <input
+              type="text"
+              id="search-turmas"
+              class="input"
+              placeholder="Pesquisar turmas..."
+            />
+            <button id="btn-nova-turma" class="btn btn-primary">Nova turma</button>
+          </div>
+
+          <div id="turma-form-container" class="hidden form-panel">
+            <form id="turma-form" class="form-grid">
+              <input type="hidden" id="turma-id" />
+
+              <div class="form-group">
+                <label for="turma-curso-id">Curso</label>
+                <select id="turma-curso-id" class="input" required></select>
+              </div>
+
+              <div class="form-group">
+                <label for="turma-nome">Nome</label>
+                <input id="turma-nome" class="input" type="text" required />
+              </div>
+
+              <div class="form-group">
+                <label for="turma-codigo">Código</label>
+                <input id="turma-codigo" class="input" type="text" />
+              </div>
+
+              <div class="form-group">
+                <label for="turma-periodo">Período</label>
+                <input id="turma-periodo" class="input" type="text" placeholder="Manhã / Tarde / Noite" />
+              </div>
+
+              <div class="form-group">
+                <label for="turma-ano">Ano</label>
+                <input id="turma-ano" class="input" type="number" />
+              </div>
+
+              <div class="form-group">
+                <label for="turma-data-inicio">Data de início</label>
+                <input id="turma-data-inicio" class="input" type="date" />
+              </div>
+
+              <div class="form-group">
+                <label for="turma-data-fim">Data de fim</label>
+                <input id="turma-data-fim" class="input" type="date" />
+              </div>
+
+              <div class="form-group">
+                <label for="turma-capacidade">Capacidade</label>
+                <input id="turma-capacidade" class="input" type="number" min="0" value="0" />
+              </div>
+
+              <div class="form-group">
+                <label for="turma-status">Status</label>
+                <select id="turma-status" class="input">
+                  <option value="ativa">Ativa</option>
+                  <option value="encerrada">Encerrada</option>
+                  <option value="cancelada">Cancelada</option>
+                </select>
+              </div>
+
+              <div class="form-actions full-width">
+                <button type="submit" class="btn btn-primary">Guardar</button>
+                <button type="button" id="btn-cancelar-turma" class="btn btn-secondary">Cancelar</button>
+              </div>
+            </form>
+          </div>
+
+          <div class="table-responsive">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Turma</th>
+                  <th>Curso</th>
+                  <th>Período</th>
+                  <th>Ano</th>
+                  <th>Capacidade</th>
+                  <th>Status</th>
+                  <th>Ações</th>
+                </tr>
+              </thead>
+              <tbody id="turmas-table-body"></tbody>
+            </table>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <script type="module" src="./assets/js/app.js"></script>
+</body>
+</html>
