@@ -54,18 +54,21 @@ async function initApp() {
     window.location.href = "./index.html";
   });
 
-  const path = window.location.pathname;
+  const path = window.location.pathname.toLowerCase();
 
   if (path.includes("dashboard.html")) {
     await initDashboardPage();
+    return;
   }
 
   if (path.includes("alunos.html")) {
     await initStudentsPage(session.user.id);
+    return;
   }
 
   if (path.includes("cursos.html")) {
     await initCoursesPage(session.user.id);
+    return;
   }
 
   if (path.includes("turmas.html")) {
