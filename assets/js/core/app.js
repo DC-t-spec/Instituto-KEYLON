@@ -7,8 +7,14 @@ import { initClassesPage } from "../modules/turmas.js";
 async function requireAuth() {
   const { data, error } = await supabase.auth.getSession();
 
-  if (error || !data?.session) {
-    window.location.href = "../../index.html";
+  if (error) {
+    console.error("Erro ao verificar sessão:", error.message);
+    window.location.href = "./index.html";
+    return null;
+  }
+
+  if (!data?.session) {
+    window.location.href = "./index.html";
     return null;
   }
 
@@ -16,11 +22,16 @@ async function requireAuth() {
 }
 
 async function loadUserProfile(userId) {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("profiles")
-    .select("full_name, email")
+    .select("full_name, email, role")
     .eq("id", userId)
     .maybeSingle();
+
+  if (error) {
+    console.error("Erro ao carregar perfil:", error.message);
+    return null;
+  }
 
   return data;
 }
@@ -30,16 +41,17 @@ async function initApp() {
   if (!session) return;
 
   const profile = await loadUserProfile(session.user.id);
-
   const userNameElement = document.getElementById("user-name");
+
   if (userNameElement) {
     userNameElement.textContent =
-      profile?.full_name || session.user.email;
+      profile?.full_name?.trim() || session.user.email || "Utilizador";
   }
 
-  document.getElementById("logout-btn")?.addEventListener("click", async () => {
+  const logoutBtn = document.getElementById("logout-btn");
+  logoutBtn?.addEventListener("click", async () => {
     await supabase.auth.signOut();
-    window.location.href = "../../index.html";
+    window.location.href = "./index.html";
   });
 
   const path = window.location.pathname.toLowerCase();
@@ -61,6 +73,7 @@ async function initApp() {
 
   if (path.includes("turmas.html")) {
     await initClassesPage();
+    return;
   }
 }
 
