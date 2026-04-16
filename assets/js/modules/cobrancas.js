@@ -54,6 +54,22 @@ async function fetchStudentsForCharges() {
   return chargesState.students;
 }
 
+function populateStudentSelect() {
+  const select = document.querySelector('select[name="student_id"]');
+
+  if (!select) return;
+
+  select.innerHTML = `<option value="">Selecionar aluno</option>`;
+
+  chargesState.students.forEach((student) => {
+    select.innerHTML += `
+      <option value="${student.id}">
+        ${student.full_name}
+      </option>
+    `;
+  });
+}
+
 async function fetchCharges() {
   let query = supabase
     .from("student_charges")
@@ -423,6 +439,7 @@ function bindBulkGenerateForm() {
 
 async function initChargesPage() {
   await fetchStudentsForCharges();
+  populateStudentSelect();
   await fetchCharges();
   renderDashboardCards();
   renderChargesTable();
