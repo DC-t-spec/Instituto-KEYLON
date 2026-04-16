@@ -11,7 +11,7 @@ async function requireAuth() {
     console.error("Erro ao verificar sessão:", error.message);
     window.location.href = "./index.html";
     return null;
-  }
+  } 
 
   if (!data?.session) {
     window.location.href = "./index.html";
