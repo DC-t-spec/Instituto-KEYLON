@@ -1,4 +1,4 @@
-const supabase = window.supabaseClient;
+import { supabase } from "../config/supabase.js";
 
 const chargesState = {
   charges: [],
@@ -10,6 +10,17 @@ const chargesState = {
     status: ""
   }
 };
+
+function formatMoney(value) {
+  return new Intl.NumberFormat("pt-MZ", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  }).format(Number(value || 0));
+}
+
+function getChargeReference(month, year) {
+  return `${String(month).padStart(2, "0")}/${year}`;
+}
 
 async function fetchStudentsForCharges() {
   const { data, error } = await supabase
@@ -35,6 +46,7 @@ async function fetchStudentsForCharges() {
 
   if (error) {
     console.error("Erro ao carregar alunos:", error);
+    chargesState.students = [];
     return [];
   }
 
@@ -57,7 +69,6 @@ async function fetchCharges() {
       discount_amount,
       final_amount,
       paid_amount,
-      balance_amount,
       due_date,
       status,
       notes,
@@ -102,7 +113,10 @@ async function fetchCharges() {
     return [];
   }
 
-  let result = data || [];
+  let result = (data || []).map((item) => ({
+    ...item,
+    balance_amount: Number(item.final_amount || 0) - Number(item.paid_amount || 0)
+  }));
 
   if (chargesState.filters.search.trim()) {
     const term = chargesState.filters.search.trim().toLowerCase();
@@ -124,17 +138,6 @@ async function fetchCharges() {
 
   chargesState.charges = result;
   return result;
-}
-
-function formatMoney(value) {
-  return new Intl.NumberFormat("pt-MZ", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2
-  }).format(Number(value || 0));
-}
-
-function getChargeReference(month, year) {
-  return `${String(month).padStart(2, "0")}/${year}`;
 }
 
 function computeDashboard(charges = []) {
@@ -181,7 +184,7 @@ function renderChargesTable() {
   if (!chargesState.charges.length) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="10" class="text-center">Nenhuma cobrança encontrada.</td>
+        <td colspan="10">Nenhuma cobrança encontrada.</td>
       </tr>
     `;
     return;
@@ -199,7 +202,7 @@ function renderChargesTable() {
         <td>${courseName}</td>
         <td>${className}</td>
         <td>${getChargeReference(item.reference_month, item.reference_year)}</td>
-        <td>${item.student_financial_type}</td>
+        <td>${item.student_financial_type || "-"}</td>
         <td>${formatMoney(item.final_amount)}</td>
         <td>${formatMoney(item.paid_amount)}</td>
         <td>${formatMoney(item.balance_amount)}</td>
@@ -218,10 +221,10 @@ async function createSingleCharge({
   month,
   year,
   baseAmount,
-  financialType,
-  scholarshipPercent,
-  dueDate,
-  notes
+  financialType = "pagante",
+  scholarshipPercent = 0,
+  dueDate = null,
+  notes = null
 }) {
   const percent = Number(scholarshipPercent || 0);
   const base = Number(baseAmount || 0);
@@ -251,10 +254,12 @@ async function createSingleCharge({
   if (error) throw error;
 }
 
-async function generateBulkCharges({ month, year, baseAmount, dueDate }) {
+async function generateBulkCharges({ month, year, baseAmount, dueDate = null }) {
   const activeStudents = chargesState.students.length
     ? chargesState.students
     : await fetchStudentsForCharges();
+
+  if (!activeStudents.length) return;
 
   const payload = activeStudents.map((student) => ({
     student_id: student.id,
@@ -271,8 +276,6 @@ async function generateBulkCharges({ month, year, baseAmount, dueDate }) {
     status: "pending"
   }));
 
-  if (!payload.length) return;
-
   const { error } = await supabase
     .from("student_charges")
     .upsert(payload, {
@@ -285,10 +288,14 @@ async function generateBulkCharges({ month, year, baseAmount, dueDate }) {
 
 async function registerPayment(chargeId, amount) {
   const charge = chargesState.charges.find((item) => item.id === chargeId);
-  if (!charge) return;
+
+  if (!charge) {
+    throw new Error("Cobrança não encontrada.");
+  }
 
   const finalAmount = Number(charge.final_amount || 0);
   const paidAmount = Number(charge.paid_amount || 0);
+
   let newPaid = paidAmount + Number(amount || 0);
 
   if (newPaid < 0) newPaid = 0;
@@ -317,8 +324,8 @@ function bindChargeFilters() {
   const statusSelect = document.querySelector("#chargeStatus");
 
   if (searchInput) {
-    searchInput.addEventListener("input", async (e) => {
-      chargesState.filters.search = e.target.value;
+    searchInput.addEventListener("input", async (event) => {
+      chargesState.filters.search = event.target.value;
       await fetchCharges();
       renderDashboardCards();
       renderChargesTable();
@@ -326,8 +333,8 @@ function bindChargeFilters() {
   }
 
   if (monthSelect) {
-    monthSelect.addEventListener("change", async (e) => {
-      chargesState.filters.month = e.target.value;
+    monthSelect.addEventListener("change", async (event) => {
+      chargesState.filters.month = event.target.value;
       await fetchCharges();
       renderDashboardCards();
       renderChargesTable();
@@ -335,8 +342,8 @@ function bindChargeFilters() {
   }
 
   if (yearSelect) {
-    yearSelect.addEventListener("change", async (e) => {
-      chargesState.filters.year = e.target.value;
+    yearSelect.addEventListener("change", async (event) => {
+      chargesState.filters.year = event.target.value;
       await fetchCharges();
       renderDashboardCards();
       renderChargesTable();
@@ -344,8 +351,8 @@ function bindChargeFilters() {
   }
 
   if (statusSelect) {
-    statusSelect.addEventListener("change", async (e) => {
-      chargesState.filters.status = e.target.value;
+    statusSelect.addEventListener("change", async (event) => {
+      chargesState.filters.status = event.target.value;
       await fetchCharges();
       renderDashboardCards();
       renderChargesTable();
@@ -357,8 +364,8 @@ function bindCreateChargeForm() {
   const form = document.querySelector("#chargeForm");
   if (!form) return;
 
-  form.addEventListener("submit", async (e) => {
-    e.preventDefault();
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
 
     const formData = new FormData(form);
 
@@ -368,8 +375,8 @@ function bindCreateChargeForm() {
         month: formData.get("reference_month"),
         year: formData.get("reference_year"),
         baseAmount: formData.get("base_amount"),
-        financialType: formData.get("student_financial_type") || "pagante",
-        scholarshipPercent: formData.get("scholarship_percent") || 0,
+        financialType: formData.get("student_financial_type"),
+        scholarshipPercent: formData.get("scholarship_percent"),
         dueDate: formData.get("due_date"),
         notes: formData.get("notes")
       });
@@ -390,8 +397,8 @@ function bindBulkGenerateForm() {
   const form = document.querySelector("#bulkChargeForm");
   if (!form) return;
 
-  form.addEventListener("submit", async (e) => {
-    e.preventDefault();
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
 
     const formData = new FormData(form);
 
@@ -424,9 +431,10 @@ async function initChargesPage() {
   bindBulkGenerateForm();
 }
 
-window.KEYLON_CHARGES = {
+export {
   initChargesPage,
   fetchCharges,
+  fetchStudentsForCharges,
   createSingleCharge,
   generateBulkCharges,
   registerPayment
