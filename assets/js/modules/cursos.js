@@ -1,111 +1,149 @@
-<!DOCTYPE html>
-<html lang="pt">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Cursos | KEYLON</title>
-  <link rel="stylesheet" href="./assets/css/base.css" />
-  <link rel="stylesheet" href="./assets/css/tokens.css" />
-  <link rel="stylesheet" href="./assets/css/layout.css" />
-  <link rel="stylesheet" href="./assets/css/components.css" />
-</head>
-<body>
-  <div class="app-shell">
-    <aside class="sidebar">
-      <div class="sidebar-brand">KEYLON</div>
-      <h2>Instituto</h2>
+import { supabase } from "../config/supabase.js";
 
-      <nav class="sidebar-nav">
-        <a href="./dashboard.html">Dashboard</a>
-        <a href="./alunos.html">Alunos</a>
-        <a href="./cursos.html" class="active">Cursos</a>
-        <a href="./turmas.html">Turmas</a>
-        <a href="#">Cobranças</a>
-        <a href="#">Pagamentos</a>
-        <a href="#">Dívidas</a>
-      </nav>
-    </aside>
+const state = {
+  courses: [],
+};
 
-    <main class="main-content">
-      <header class="topbar">
-        <div>
-          <h1>Cursos</h1>
-          <p>Cadastro, edição e consulta de cursos</p>
-        </div>
-        <div class="topbar-actions">
-          <span id="user-name">Utilizador</span>
-          <button id="logout-btn" class="btn btn-secondary">Sair</button>
-        </div>
-      </header>
+function el(id) {
+  return document.getElementById(id);
+}
 
-      <section class="page-content">
-        <div class="card">
-          <div class="section-header">
-            <h3>Novo curso</h3>
-          </div>
+function clearForm() {
+  el("curso-id").value = "";
+  el("curso-name").value = "";
+  el("curso-code").value = "";
+  el("curso-hours").value = "0";
+  el("curso-months").value = "0";
+  el("curso-status").value = "active";
+}
 
-          <form id="curso-form" class="form-grid">
-            <input type="hidden" id="curso-id" />
+async function fetchCourses() {
+  const { data, error } = await supabase
+    .from("courses")
+    .select("*")
+    .order("created_at", { ascending: false });
 
-            <div class="form-group">
-              <label for="curso-name">Nome do curso</label>
-              <input id="curso-name" class="input" type="text" required />
-            </div>
+  if (error) {
+    console.error("Erro ao carregar cursos:", error.message);
+    return;
+  }
 
-            <div class="form-group">
-              <label for="curso-code">Código</label>
-              <input id="curso-code" class="input" type="text" />
-            </div>
+  state.courses = data || [];
+  renderCourses();
+}
 
-            <div class="form-group">
-              <label for="curso-hours">Carga horária</label>
-              <input id="curso-hours" class="input" type="number" min="0" value="0" />
-            </div>
+function renderCourses() {
+  const tbody = el("cursos-body");
+  if (!tbody) return;
 
-            <div class="form-group">
-              <label for="curso-months">Duração em meses</label>
-              <input id="curso-months" class="input" type="number" min="0" value="0" />
-            </div>
+  if (!state.courses.length) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="6">Nenhum curso encontrado.</td>
+      </tr>
+    `;
+    return;
+  }
 
-            <div class="form-group full-width">
-              <label for="curso-status">Status</label>
-              <select id="curso-status" class="input">
-                <option value="active">Active</option>
-                <option value="inactive">Inactive</option>
-              </select>
-            </div>
+  tbody.innerHTML = state.courses.map((course) => `
+    <tr>
+      <td>${course.name || ""}</td>
+      <td>${course.code || ""}</td>
+      <td>${course.workload_hours ?? 0}</td>
+      <td>${course.duration_months ?? 0}</td>
+      <td>${course.status || ""}</td>
+      <td>
+        <button type="button" class="btn btn-secondary btn-sm" data-action="edit" data-id="${course.id}">Editar</button>
+        <button type="button" class="btn btn-danger btn-sm" data-action="delete" data-id="${course.id}">Eliminar</button>
+      </td>
+    </tr>
+  `).join("");
+}
 
-            <div class="form-actions full-width">
-              <button type="submit" class="btn btn-primary">Guardar</button>
-            </div>
-          </form>
-        </div>
+function fillForm(course) {
+  el("curso-id").value = course.id || "";
+  el("curso-name").value = course.name || "";
+  el("curso-code").value = course.code || "";
+  el("curso-hours").value = course.workload_hours ?? 0;
+  el("curso-months").value = course.duration_months ?? 0;
+  el("curso-status").value = course.status || "active";
+}
 
-        <div class="card">
-          <div class="section-header">
-            <h3>Lista de cursos</h3>
-          </div>
+async function saveCourse(event) {
+  event.preventDefault();
 
-          <div class="table-responsive">
-            <table class="table">
-              <thead>
-                <tr>
-                  <th>Nome</th>
-                  <th>Código</th>
-                  <th>Carga horária</th>
-                  <th>Duração</th>
-                  <th>Status</th>
-                  <th>Ações</th>
-                </tr>
-              </thead>
-              <tbody id="cursos-body"></tbody>
-            </table>
-          </div>
-        </div>
-      </section>
-    </main>
-  </div>
+  const id = el("curso-id").value.trim();
 
-  <script type="module" src="./assets/js/core/app.js"></script>
-</body>
-</html>
+  const payload = {
+    name: el("curso-name").value.trim(),
+    code: el("curso-code").value.trim() || null,
+    workload_hours: Number(el("curso-hours").value || 0),
+    duration_months: Number(el("curso-months").value || 0),
+    status: el("curso-status").value,
+  };
+
+  if (!payload.name) {
+    alert("O nome do curso é obrigatório.");
+    return;
+  }
+
+  let error = null;
+
+  if (id) {
+    ({ error } = await supabase.from("courses").update(payload).eq("id", id));
+  } else {
+    ({ error } = await supabase.from("courses").insert([payload]));
+  }
+
+  if (error) {
+    console.error("Erro ao guardar curso:", error.message);
+    alert(error.message || "Erro ao guardar curso.");
+    return;
+  }
+
+  clearForm();
+  await fetchCourses();
+}
+
+async function deleteCourse(id) {
+  const confirmed = window.confirm("Deseja eliminar este curso?");
+  if (!confirmed) return;
+
+  const { error } = await supabase.from("courses").delete().eq("id", id);
+
+  if (error) {
+    console.error("Erro ao eliminar curso:", error.message);
+    alert("Não foi possível eliminar o curso.");
+    return;
+  }
+
+  await fetchCourses();
+}
+
+function bindEvents() {
+  el("curso-form")?.addEventListener("submit", saveCourse);
+
+  el("cursos-body")?.addEventListener("click", async (event) => {
+    const button = event.target.closest("button");
+    if (!button) return;
+
+    const action = button.dataset.action;
+    const id = button.dataset.id;
+    const course = state.courses.find((item) => item.id === id);
+
+    if (action === "edit" && course) {
+      fillForm(course);
+      return;
+    }
+
+    if (action === "delete" && id) {
+      await deleteCourse(id);
+    }
+  });
+}
+
+export async function initCoursesPage() {
+  bindEvents();
+  clearForm();
+  await fetchCourses();
+}
