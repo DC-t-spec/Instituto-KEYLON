@@ -4,7 +4,7 @@ import { initStudentsPage } from "../modules/alunos.js";
 import { initCoursesPage } from "../modules/cursos.js";
 import { initClassesPage } from "../modules/turmas.js";
 
-async function requireAuth() {
+async function requireAuth() { 
   const { data, error } = await supabase.auth.getSession();
 
   if (error) {
