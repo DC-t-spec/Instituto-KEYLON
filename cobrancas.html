@@ -10,10 +10,8 @@
   <link rel="stylesheet" href="./assets/css/layout.css" />
   <link rel="stylesheet" href="./assets/css/components.css" />
 </head>
-
 <body>
   <div class="app-shell">
-    <!-- SIDEBAR -->
     <aside class="sidebar">
       <div class="sidebar-brand">
         <span class="brand-badge">KEYLON</span>
@@ -35,12 +33,11 @@
       </button>
     </aside>
 
-    <!-- MAIN -->
     <div class="app-main">
       <header class="topbar">
         <div>
           <h1>Cobranças</h1>
-          <p class="page-subtitle">Gestão de mensalidades e pagamentos</p>
+          <p class="page-subtitle">Mensalidades, fichas e testes</p>
         </div>
 
         <div class="topbar-user">
@@ -49,8 +46,6 @@
       </header>
 
       <main class="page-content">
-
-        <!-- STATS -->
         <section class="stats-grid">
           <div class="stat-card">
             <span class="stat-label">Total esperado</span>
@@ -68,15 +63,12 @@
           </div>
 
           <div class="stat-card stat-card-highlight">
-            <span class="stat-label">Pendentes</span>
-            <strong class="stat-value" data-charge-stat="pending">0</strong>
+            <span class="stat-label">Pagas</span>
+            <strong class="stat-value" data-charge-stat="completed">0</strong>
           </div>
         </section>
 
-        <!-- FORM + LIST -->
         <section class="split-layout">
-
-          <!-- FORM -->
           <article class="panel">
             <div class="panel-header">
               <h3>Nova cobrança</h3>
@@ -84,15 +76,30 @@
 
             <div class="panel-body">
               <form id="chargeForm" class="form-grid">
-
-                <div class="form-group">
-                  <label>Aluno</label>
-                  <select name="student_id" required></select>
+                <div class="form-group form-group-full">
+                  <label for="charge-student-id">Aluno</label>
+                  <select id="charge-student-id" name="student_id" required>
+                    <option value="">Selecionar aluno</option>
+                  </select>
                 </div>
 
                 <div class="form-group">
-                  <label>Mês</label>
-                  <select name="reference_month" required>
+                  <label for="charge-type">Tipo de cobrança</label>
+                  <select id="charge-type" name="charge_type" required>
+                    <option value="monthly_fee">Mensalidade</option>
+                    <option value="registration_fee">Ficha</option>
+                    <option value="test_fee">Teste</option>
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <label for="charge-title">Título</label>
+                  <input id="charge-title" name="title" type="text" placeholder="Ex: Mensalidade Janeiro" />
+                </div>
+
+                <div class="form-group">
+                  <label for="charge-month">Mês de referência</label>
+                  <select id="charge-month" name="reference_month" required>
                     <option value="">Selecionar</option>
                     <option value="1">Janeiro</option>
                     <option value="2">Fevereiro</option>
@@ -110,116 +117,199 @@
                 </div>
 
                 <div class="form-group">
-                  <label>Ano</label>
-                  <input type="number" name="reference_year" required />
+                  <label for="charge-year">Ano de referência</label>
+                  <input id="charge-year" name="reference_year" type="number" required />
                 </div>
 
                 <div class="form-group">
-                  <label>Valor base</label>
-                  <input type="number" name="base_amount" required />
+                  <label for="charge-amount">Valor</label>
+                  <input id="charge-amount" name="amount" type="number" min="0" step="0.01" required />
                 </div>
 
                 <div class="form-group">
-                  <label>Tipo</label>
-                  <select name="student_financial_type">
+                  <label for="charge-discount">Desconto</label>
+                  <input id="charge-discount" name="discount" type="number" min="0" step="0.01" value="0" />
+                </div>
+
+                <div class="form-group">
+                  <label for="charge-due-date">Data limite</label>
+                  <input id="charge-due-date" name="due_date" type="date" />
+                </div>
+
+                <div class="form-group">
+                  <label for="charge-financial-type">Tipo financeiro</label>
+                  <select id="charge-financial-type" name="student_financial_type">
                     <option value="pagante">Pagante</option>
                     <option value="bolseiro">Bolseiro</option>
                   </select>
                 </div>
 
-                <div class="form-group">
-                  <label>% Bolsa</label>
-                  <input type="number" name="scholarship_percent" value="0" />
-                </div>
-
                 <div class="form-group form-group-full">
-                  <label>Data limite</label>
-                  <input type="date" name="due_date" />
+                  <label for="charge-notes">Observações</label>
+                  <textarea id="charge-notes" name="notes" rows="3"></textarea>
                 </div>
 
                 <div class="form-actions form-group-full">
-                  <button type="submit" class="btn btn-primary">
-                    Criar cobrança
-                  </button>
+                  <button type="submit" class="btn btn-primary">Guardar cobrança</button>
+                  <button type="button" id="charge-reset-btn" class="btn btn-secondary">Limpar</button>
                 </div>
-
               </form>
             </div>
           </article>
 
-          <!-- LISTA -->
           <article class="panel">
-            <div class="panel-header panel-header-inline">
-              <h3>Lista de cobranças</h3>
-
-              <div class="toolbar">
-                <input
-                  type="text"
-                  id="chargeSearch"
-                  placeholder="Pesquisar..."
-                  class="search-input"
-                />
-
-                <select id="chargeMonth">
-                  <option value="">Mês</option>
-                  <option value="1">Jan</option>
-                  <option value="2">Fev</option>
-                  <option value="3">Mar</option>
-                  <option value="4">Abr</option>
-                  <option value="5">Mai</option>
-                  <option value="6">Jun</option>
-                  <option value="7">Jul</option>
-                  <option value="8">Ago</option>
-                  <option value="9">Set</option>
-                  <option value="10">Out</option>
-                  <option value="11">Nov</option>
-                  <option value="12">Dez</option>
-                </select>
-
-                <select id="chargeStatus">
-                  <option value="">Estado</option>
-                  <option value="pending">Pendente</option>
-                  <option value="partial">Parcial</option>
-                  <option value="paid">Pago</option>
-                </select>
-              </div>
+            <div class="panel-header">
+              <h3>Gerar cobrança em massa</h3>
             </div>
 
-            <div class="table-wrap">
-              <table class="data-table">
-                <thead>
-                  <tr>
-                    <th>Aluno</th>
-                    <th>Nº</th>
-                    <th>Curso</th>
-                    <th>Turma</th>
-                    <th>Ref</th>
-                    <th>Tipo</th>
-                    <th>Valor</th>
-                    <th>Pago</th>
-                    <th>Saldo</th>
-                    <th>Estado</th>
-                  </tr>
-                </thead>
+            <div class="panel-body">
+              <form id="bulkChargeForm" class="form-grid">
+                <div class="form-group form-group-full">
+                  <label for="bulk-class-id">Turma</label>
+                  <select id="bulk-class-id" name="class_id" required>
+                    <option value="">Selecionar turma</option>
+                  </select>
+                </div>
 
-                <tbody id="chargesTableBody">
-                  <tr>
-                    <td colspan="10" class="empty-cell">
-                      A carregar cobranças...
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
+                <div class="form-group">
+                  <label for="bulk-charge-type">Tipo</label>
+                  <select id="bulk-charge-type" name="charge_type" required>
+                    <option value="monthly_fee">Mensalidade</option>
+                    <option value="registration_fee">Ficha</option>
+                    <option value="test_fee">Teste</option>
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <label for="bulk-title">Título</label>
+                  <input id="bulk-title" name="title" type="text" placeholder="Ex: Teste 1º Trimestre" />
+                </div>
+
+                <div class="form-group">
+                  <label for="bulk-month">Mês</label>
+                  <select id="bulk-month" name="reference_month" required>
+                    <option value="">Selecionar</option>
+                    <option value="1">Janeiro</option>
+                    <option value="2">Fevereiro</option>
+                    <option value="3">Março</option>
+                    <option value="4">Abril</option>
+                    <option value="5">Maio</option>
+                    <option value="6">Junho</option>
+                    <option value="7">Julho</option>
+                    <option value="8">Agosto</option>
+                    <option value="9">Setembro</option>
+                    <option value="10">Outubro</option>
+                    <option value="11">Novembro</option>
+                    <option value="12">Dezembro</option>
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <label for="bulk-year">Ano</label>
+                  <input id="bulk-year" name="reference_year" type="number" required />
+                </div>
+
+                <div class="form-group">
+                  <label for="bulk-amount">Valor</label>
+                  <input id="bulk-amount" name="amount" type="number" min="0" step="0.01" required />
+                </div>
+
+                <div class="form-group">
+                  <label for="bulk-due-date">Data limite</label>
+                  <input id="bulk-due-date" name="due_date" type="date" />
+                </div>
+
+                <div class="form-group form-group-full">
+                  <label for="bulk-notes">Observações</label>
+                  <textarea id="bulk-notes" name="notes" rows="3"></textarea>
+                </div>
+
+                <div class="form-actions form-group-full">
+                  <button type="submit" class="btn btn-primary">Gerar em massa</button>
+                </div>
+              </form>
             </div>
           </article>
-
         </section>
 
+        <article class="panel">
+          <div class="panel-header panel-header-inline">
+            <h3>Lista de cobranças</h3>
+
+            <div class="toolbar">
+              <input
+                type="text"
+                id="chargeSearch"
+                placeholder="Pesquisar por aluno, curso ou turma"
+                class="search-input"
+              />
+
+              <select id="chargeMonth">
+                <option value="">Mês</option>
+                <option value="1">Jan</option>
+                <option value="2">Fev</option>
+                <option value="3">Mar</option>
+                <option value="4">Abr</option>
+                <option value="5">Mai</option>
+                <option value="6">Jun</option>
+                <option value="7">Jul</option>
+                <option value="8">Ago</option>
+                <option value="9">Set</option>
+                <option value="10">Out</option>
+                <option value="11">Nov</option>
+                <option value="12">Dez</option>
+              </select>
+
+              <select id="chargeYear">
+                <option value="">Ano</option>
+              </select>
+
+              <select id="chargeStatus">
+                <option value="">Estado</option>
+                <option value="pending">Pendente</option>
+                <option value="partial">Parcial</option>
+                <option value="paid">Pago</option>
+                <option value="cancelled">Cancelado</option>
+              </select>
+
+              <select id="chargeTypeFilter">
+                <option value="">Tipo</option>
+                <option value="monthly_fee">Mensalidade</option>
+                <option value="registration_fee">Ficha</option>
+                <option value="test_fee">Teste</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Aluno</th>
+                  <th>Nº</th>
+                  <th>Curso</th>
+                  <th>Turma</th>
+                  <th>Tipo</th>
+                  <th>Título</th>
+                  <th>Ref</th>
+                  <th>Valor final</th>
+                  <th>Pago</th>
+                  <th>Saldo</th>
+                  <th>Estado</th>
+                </tr>
+              </thead>
+              <tbody id="chargesTableBody">
+                <tr>
+                  <td colspan="11" class="empty-cell">A carregar cobranças...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </article>
       </main>
     </div>
   </div>
 
-  <!-- JS -->
   <script type="module">
     import { initChargesPage } from "./assets/js/modules/cobrancas.js";
 
