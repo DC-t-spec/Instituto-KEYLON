@@ -4,49 +4,56 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Turmas | KEYLON</title>
+  <link rel="stylesheet" href="./assets/css/base.css" />
+  <link rel="stylesheet" href="./assets/css/tokens.css" />
   <link rel="stylesheet" href="./assets/css/layout.css" />
   <link rel="stylesheet" href="./assets/css/components.css" />
 </head>
 <body>
   <div class="app-shell">
     <aside class="sidebar">
-      <div class="sidebar-brand">KEYLON</div>
-     <nav class="sidebar-nav">
-  <a href="./dashboard.html" class="nav-link">Dashboard</a>
-  <a href="./alunos.html" class="nav-link">Alunos</a>
-  <a href="./cursos.html" class="nav-link active">Cursos</a>
-  <a href="./turmas.html" class="nav-link">Turmas</a>
-  <a href="#" class="nav-link is-disabled">Cobranças</a>
-  <a href="#" class="nav-link is-disabled">Pagamentos</a>
-  <a href="#" class="nav-link is-disabled">Dívidas</a>
-</nav>
+      <div class="sidebar-brand">
+        <span class="brand-badge">KEYLON</span>
+        <h2>Instituto</h2>
+      </div>
+
+      <nav class="sidebar-nav">
+        <a href="./dashboard.html" class="nav-link">Dashboard</a>
+        <a href="./alunos.html" class="nav-link">Alunos</a>
+        <a href="./cursos.html" class="nav-link">Cursos</a>
+        <a href="./turmas.html" class="nav-link active">Turmas</a>
+        <a href="#" class="nav-link is-disabled">Cobranças</a>
+        <a href="#" class="nav-link is-disabled">Pagamentos</a>
+        <a href="#" class="nav-link is-disabled">Dívidas</a>
+      </nav>
     </aside>
 
-    <div class="main-content">
+    <main class="app-main">
       <header class="topbar">
         <div>
           <h1>Turmas</h1>
-          <p>Gestão de turmas</p>
+          <p class="page-subtitle">Gestão de turmas</p>
         </div>
+
         <div class="topbar-actions">
-          <span id="user-name">Utilizador</span>
+          <span id="user-name" class="topbar-user">Utilizador</span>
           <button id="logout-btn" class="btn btn-secondary">Sair</button>
         </div>
       </header>
 
-      <main class="page-content">
-        <section class="card">
-          <div class="section-header">
+      <section class="page-content">
+        <div class="panel">
+          <div class="panel-header panel-header-inline">
             <input
               type="text"
               id="search-turmas"
-              class="input"
+              class="input search-input"
               placeholder="Pesquisar turmas..."
             />
             <button id="btn-nova-turma" class="btn btn-primary">Nova turma</button>
           </div>
 
-          <div id="turma-form-container" class="hidden form-panel">
+          <div id="turma-form-container" class="panel-body hidden">
             <form id="turma-form" class="form-grid">
               <input type="hidden" id="turma-id" />
 
@@ -56,7 +63,7 @@
               </div>
 
               <div class="form-group">
-                <label for="turma-nome">Nome</label>
+                <label for="turma-nome">Nome da turma</label>
                 <input id="turma-nome" class="input" type="text" required />
               </div>
 
@@ -76,6 +83,11 @@
               </div>
 
               <div class="form-group">
+                <label for="turma-capacidade">Capacidade</label>
+                <input id="turma-capacidade" class="input" type="number" min="0" value="0" />
+              </div>
+
+              <div class="form-group">
                 <label for="turma-data-inicio">Data de início</label>
                 <input id="turma-data-inicio" class="input" type="date" />
               </div>
@@ -85,29 +97,24 @@
                 <input id="turma-data-fim" class="input" type="date" />
               </div>
 
-              <div class="form-group">
-                <label for="turma-capacidade">Capacidade</label>
-                <input id="turma-capacidade" class="input" type="number" min="0" value="0" />
-              </div>
-
-              <div class="form-group">
+              <div class="form-group form-group-full">
                 <label for="turma-status">Status</label>
                 <select id="turma-status" class="input">
-                  <option value="ativa">Ativa</option>
-                  <option value="encerrada">Encerrada</option>
-                  <option value="cancelada">Cancelada</option>
+                  <option value="active">Active</option>
+                  <option value="closed">Closed</option>
+                  <option value="cancelled">Cancelled</option>
                 </select>
               </div>
 
-              <div class="form-actions full-width">
+              <div class="form-actions form-group-full">
                 <button type="submit" class="btn btn-primary">Guardar</button>
                 <button type="button" id="btn-cancelar-turma" class="btn btn-secondary">Cancelar</button>
               </div>
             </form>
           </div>
 
-          <div class="table-responsive">
-            <table class="table">
+          <div class="table-wrap">
+            <table class="data-table">
               <thead>
                 <tr>
                   <th>Turma</th>
@@ -122,11 +129,11 @@
               <tbody id="turmas-table-body"></tbody>
             </table>
           </div>
-        </section>
-      </main>
-    </div>
+        </div>
+      </section>
+    </main>
   </div>
 
-  <script type="module" src="./assets/js/app.js"></script>
+  <script type="module" src="./assets/js/core/app.js"></script>
 </body>
 </html>
