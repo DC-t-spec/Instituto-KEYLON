@@ -3,291 +3,187 @@ import { supabase } from "../config/supabase.js";
 const state = {
   students: [],
   classes: [],
-  filteredStudents: [],
+  filtered: [],
 };
 
 function el(id) {
   return document.getElementById(id);
 }
 
-function escapeHtml(value) {
-  return String(value ?? "")
+function escapeHtml(v) {
+  return String(v ?? "")
     .replaceAll("&", "&amp;")
     .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
+    .replaceAll(">", "&gt;");
 }
 
-function resetStudentForm() {
+function resetForm() {
+  el("student-form").reset();
   el("student-id").value = "";
-  el("student-number").value = "";
-  el("student-name").value = "";
-  el("student-sex").value = "";
-  el("student-birth-date").value = "";
-  el("student-phone").value = "";
-  el("student-email").value = "";
-  el("student-document-type").value = "";
-  el("student-document-number").value = "";
-  el("student-class-id").value = "";
-  el("student-type").value = "regular";
-  el("student-status").value = "active";
 }
 
-function fillStudentForm(student) {
-  el("student-id").value = student.id ?? "";
-  el("student-number").value = student.student_number ?? "";
-  el("student-name").value = student.full_name ?? "";
-  el("student-sex").value = student.sex ?? "";
-  el("student-birth-date").value = student.birth_date ?? "";
-  el("student-phone").value = student.phone ?? "";
-  el("student-email").value = student.email ?? "";
-  el("student-document-type").value = student.document_type ?? "";
-  el("student-document-number").value = student.document_number ?? "";
-  el("student-class-id").value = student.class_id ?? "";
-  el("student-type").value = student.student_type ?? "regular";
-  el("student-status").value = student.status ?? "active";
+function fillForm(s) {
+  el("student-id").value = s.id || "";
+  el("full_name").value = s.full_name || "";
+  el("student_number").value = s.student_number || "";
+  el("gender").value = s.sex || "";
+  el("birth_date").value = s.birth_date || "";
+  el("phone").value = s.phone || "";
+  el("email").value = s.email || "";
+  el("document_type").value = s.document_type || "";
+  el("document_number").value = s.document_number || "";
+  el("class_id").value = s.class_id || "";
+  el("status").value = s.status || "active";
 }
 
 async function fetchClasses() {
-  const { data, error } = await supabase
+  const { data } = await supabase
     .from("classes")
     .select(`
       id,
       name,
-      courses (
-        id,
-        name
-      )
-    `)
-    .order("name", { ascending: true });
-
-  if (error) {
-    console.error("Erro ao carregar turmas:", error.message);
-    alert("Erro ao carregar turmas.");
-    return;
-  }
+      courses ( name )
+    `);
 
   state.classes = data || [];
-  renderClassOptions();
-}
 
-function renderClassOptions() {
-  const select = el("student-class-id");
-  if (!select) return;
-
-  select.innerHTML = `
+  el("class_id").innerHTML = `
     <option value="">Selecionar turma</option>
-    ${state.classes
-      .map(
-        (item) =>
-          `<option value="${item.id}">${escapeHtml(item.name)}${item.courses?.name ? " • " + escapeHtml(item.courses.name) : ""}</option>`
-      )
-      .join("")}
+    ${state.classes.map(c => `
+      <option value="${c.id}">
+        ${c.name} ${c.courses?.name ? "• " + c.courses.name : ""}
+      </option>
+    `).join("")}
   `;
 }
 
 async function fetchStudents() {
-  const { data, error } = await supabase
+  const { data } = await supabase
     .from("students")
     .select(`
-      id,
-      student_number,
-      full_name,
-      sex,
-      birth_date,
-      phone,
-      email,
-      document_type,
-      document_number,
-      class_id,
-      student_type,
-      status,
-      created_at,
+      *,
       classes (
-        id,
         name,
-        courses (
-          id,
-          name
-        )
+        courses ( name )
       )
     `)
     .order("created_at", { ascending: false });
 
-  if (error) {
-    console.error("Erro ao carregar alunos:", error.message);
-    alert("Erro ao carregar alunos.");
-    return;
-  }
-
   state.students = data || [];
-  state.filteredStudents = [...state.students];
-  renderStudentsTable();
+  state.filtered = [...state.students];
+
+  render();
 }
 
-function badgeType(type) {
-  if (type === "bolseiro") return "badge badge-green";
-  if (type === "regular") return "badge badge-blue";
-  return "badge badge-slate";
-}
-
-function badgeStatus(status) {
+function badge(status) {
   if (status === "active") return "badge badge-green";
   if (status === "inactive") return "badge badge-slate";
   return "badge badge-slate";
 }
 
-function renderStudentsTable() {
+function render() {
   const tbody = el("students-table-body");
-  if (!tbody) return;
 
-  if (!state.filteredStudents.length) {
-    tbody.innerHTML = `
-      <tr>
-        <td colspan="8" class="empty-cell">Nenhum aluno encontrado.</td>
-      </tr>
-    `;
+  if (!state.filtered.length) {
+    tbody.innerHTML = `<tr><td colspan="7">Sem alunos</td></tr>`;
     return;
   }
 
-  tbody.innerHTML = state.filteredStudents
-    .map(
-      (student) => `
-        <tr>
-          <td>${escapeHtml(student.student_number || "-")}</td>
-          <td>${escapeHtml(student.full_name || "-")}</td>
-          <td>${escapeHtml(student.classes?.courses?.name || "-")}</td>
-          <td>${escapeHtml(student.classes?.name || "-")}</td>
-          <td><span class="${badgeType(student.student_type)}">${escapeHtml(student.student_type || "-")}</span></td>
-          <td><span class="${badgeStatus(student.status)}">${escapeHtml(student.status || "-")}</span></td>
-          <td>${escapeHtml(student.phone || "-")}</td>
-          <td>
-            <div class="action-inline">
-              <button class="btn btn-sm btn-edit" data-action="edit" data-id="${student.id}">Editar</button>
-              <button class="btn btn-sm btn-danger" data-action="delete" data-id="${student.id}">Eliminar</button>
-            </div>
-          </td>
-        </tr>
-      `
-    )
-    .join("");
+  tbody.innerHTML = state.filtered.map(s => `
+    <tr>
+      <td>${s.student_number || "-"}</td>
+      <td>${escapeHtml(s.full_name)}</td>
+      <td>${escapeHtml(s.classes?.courses?.name || "-")}</td>
+      <td>${escapeHtml(s.classes?.name || "-")}</td>
+      <td>${s.student_type || "-"}</td>
+      <td><span class="${badge(s.status)}">${s.status}</span></td>
+      <td>
+        <button data-id="${s.id}" data-action="edit">✏️</button>
+        <button data-id="${s.id}" data-action="delete">🗑️</button>
+      </td>
+    </tr>
+  `).join("");
 }
 
-function filterStudents(term) {
-  const query = term.trim().toLowerCase();
+function filter(term) {
+  const q = term.toLowerCase();
 
-  if (!query) {
-    state.filteredStudents = [...state.students];
-  } else {
-    state.filteredStudents = state.students.filter((student) => {
-      return (
-        (student.student_number || "").toLowerCase().includes(query) ||
-        (student.full_name || "").toLowerCase().includes(query) ||
-        (student.phone || "").toLowerCase().includes(query) ||
-        (student.email || "").toLowerCase().includes(query) ||
-        (student.student_type || "").toLowerCase().includes(query) ||
-        (student.status || "").toLowerCase().includes(query) ||
-        (student.classes?.name || "").toLowerCase().includes(query) ||
-        (student.classes?.courses?.name || "").toLowerCase().includes(query)
-      );
-    });
-  }
+  state.filtered = state.students.filter(s =>
+    (s.full_name || "").toLowerCase().includes(q) ||
+    (s.student_number || "").toLowerCase().includes(q)
+  );
 
-  renderStudentsTable();
+  render();
 }
 
-function generateStudentNumber() {
-  const total = state.students.length + 1;
-  return `KEY-${String(total).padStart(4, "0")}`;
+function generateNumber() {
+  return "KEY-" + String(state.students.length + 1).padStart(5, "0");
 }
 
-async function saveStudent(event) {
-  event.preventDefault();
+async function save(e) {
+  e.preventDefault();
 
-  const id = el("student-id").value.trim();
-  const typedNumber = el("student-number").value.trim();
+  const id = el("student-id").value;
 
   const payload = {
-    student_number: typedNumber || generateStudentNumber(),
-    full_name: el("student-name").value.trim(),
-    sex: el("student-sex").value || null,
-    birth_date: el("student-birth-date").value || null,
-    phone: el("student-phone").value.trim() || null,
-    email: el("student-email").value.trim() || null,
-    document_type: el("student-document-type").value.trim() || null,
-    document_number: el("student-document-number").value.trim() || null,
-    class_id: el("student-class-id").value || null,
-    student_type: el("student-type").value || "regular",
-    status: el("student-status").value || "active",
+    full_name: el("full_name").value,
+    student_number: el("student_number").value || generateNumber(),
+    sex: el("gender").value || null,
+    birth_date: el("birth_date").value || null,
+    phone: el("phone").value || null,
+    email: el("email").value || null,
+    document_type: el("document_type").value || null,
+    document_number: el("document_number").value || null,
+    class_id: el("class_id").value || null,
+    status: el("status").value || "active",
   };
 
   if (!payload.full_name) {
-    alert("O nome do aluno é obrigatório.");
+    alert("Nome obrigatório");
     return;
   }
-
-  let error;
 
   if (id) {
-    ({ error } = await supabase.from("students").update(payload).eq("id", id));
+    await supabase.from("students").update(payload).eq("id", id);
   } else {
-    ({ error } = await supabase.from("students").insert([payload]));
+    await supabase.from("students").insert([payload]);
   }
 
-  if (error) {
-    console.error("Erro ao guardar aluno:", error.message);
-    alert(error.message || "Erro ao guardar aluno.");
-    return;
-  }
-
-  resetStudentForm();
-  await fetchStudents();
+  resetForm();
+  fetchStudents();
 }
 
-async function deleteStudent(id) {
-  const confirmed = window.confirm("Deseja eliminar este aluno?");
-  if (!confirmed) return;
+async function remove(id) {
+  if (!confirm("Eliminar aluno?")) return;
 
-  const { error } = await supabase.from("students").delete().eq("id", id);
-
-  if (error) {
-    console.error("Erro ao eliminar aluno:", error.message);
-    alert("Não foi possível eliminar este aluno.");
-    return;
-  }
-
-  await fetchStudents();
+  await supabase.from("students").delete().eq("id", id);
+  fetchStudents();
 }
 
-function bindEvents() {
-  el("student-form")?.addEventListener("submit", saveStudent);
+function bind() {
+  el("student-form").addEventListener("submit", save);
 
-  el("search-students")?.addEventListener("input", (event) => {
-    filterStudents(event.target.value);
+  el("student-search").addEventListener("input", e => {
+    filter(e.target.value);
   });
 
-  el("students-table-body")?.addEventListener("click", async (event) => {
-    const button = event.target.closest("button");
-    if (!button) return;
+  el("reset-student-btn").addEventListener("click", resetForm);
 
-    const action = button.dataset.action;
-    const id = button.dataset.id;
-    const student = state.students.find((item) => item.id === id);
+  el("students-table-body").addEventListener("click", e => {
+    const btn = e.target.closest("button");
+    if (!btn) return;
 
-    if (action === "edit" && student) {
-      fillStudentForm(student);
-      return;
-    }
+    const id = btn.dataset.id;
+    const action = btn.dataset.action;
+    const s = state.students.find(x => x.id === id);
 
-    if (action === "delete" && id) {
-      await deleteStudent(id);
-    }
+    if (action === "edit") fillForm(s);
+    if (action === "delete") remove(id);
   });
 }
 
 export async function initStudentsPage() {
-  bindEvents();
+  bind();
   await fetchClasses();
   await fetchStudents();
 }
