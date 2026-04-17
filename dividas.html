@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8" />
+  <title>Dívidas</title>
+  <link rel="stylesheet" href="assets/css/base.css" />
+  <link rel="stylesheet" href="assets/css/components.css" />
+  <link rel="stylesheet" href="assets/css/layout.css" />
+</head>
+
+<body class="app-shell">
+  <aside class="sidebar">
+    <nav>
+      <a class="nav-link" href="dashboard.html">Dashboard</a>
+      <a class="nav-link" href="alunos.html">Alunos</a>
+      <a class="nav-link" href="cursos.html">Cursos</a>
+      <a class="nav-link" href="turmas.html">Turmas</a>
+      <a class="nav-link" href="cobrancas.html">Cobranças</a>
+      <a class="nav-link" href="pagamentos.html">Pagamentos</a>
+      <a class="nav-link active" href="dividas.html">Dívidas</a>
+    </nav>
+  </aside>
+
+  <main class="app-main">
+    <div class="topbar">
+      <h1>Dívidas</h1>
+    </div>
+
+    <div class="page-content">
+
+      <div class="panel">
+        <div class="panel-header panel-header-inline">
+          <input id="search-dividas" class="search-input" placeholder="Buscar aluno..." />
+          
+          <select id="filter-status" class="form-group">
+            <option value="">Todos</option>
+            <option value="overdue">Atrasados</option>
+            <option value="pending">Pendentes</option>
+            <option value="paid">Pagos</option>
+          </select>
+        </div>
+
+        <div class="panel-body">
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Aluno</th>
+                  <th>Curso</th>
+                  <th>Turma</th>
+                  <th>Total</th>
+                  <th>Pago</th>
+                  <th>Dívida</th>
+                  <th>Estado</th>
+                  <th>Vencimento</th>
+                </tr>
+              </thead>
+              <tbody id="dividas-table-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <script type="module">
+    import { initDividas } from "./assets/js/modules/dividas.js";
+    initDividas();
+  </script>
+</body>
+</html>
