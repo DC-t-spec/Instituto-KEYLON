@@ -41,30 +41,31 @@ async function fetchPayments() {
     .select(`
       id,
       charge_id,
+      student_id,
       amount,
       payment_date,
       method,
+      payment_method,
       reference,
       notes,
       created_at,
-      student_charges (
+      student_charges!payments_charge_id_fkey (
         id,
         title,
-        charge_type,
-        student_id,
-        students (
+        charge_type
+      ),
+      students!payments_student_id_fkey (
+        id,
+        full_name,
+        student_number,
+        class_id,
+        classes (
           id,
-          full_name,
-          student_number,
-          class_id,
-          classes (
+          name,
+          course_id,
+          courses (
             id,
-            name,
-            course_id,
-            courses (
-              id,
-              name
-            )
+            name
           )
         )
       )
@@ -77,7 +78,9 @@ async function fetchPayments() {
   }
 
   if (paymentsState.filters.method) {
-    query = query.eq("method", paymentsState.filters.method);
+    query = query.or(
+      `method.eq.${paymentsState.filters.method},payment_method.eq.${paymentsState.filters.method}`
+    );
   }
 
   const { data, error } = await query;
@@ -94,7 +97,7 @@ async function fetchPayments() {
     const term = paymentsState.filters.search.trim().toLowerCase();
 
     rows = rows.filter((item) => {
-      const student = item.student_charges?.students;
+      const student = item.students;
       const className = student?.classes?.name?.toLowerCase() || "";
       const courseName = student?.classes?.courses?.name?.toLowerCase() || "";
       const fullName = student?.full_name?.toLowerCase() || "";
@@ -153,9 +156,10 @@ function renderTable() {
 
   tbody.innerHTML = paymentsState.payments.map((item) => {
     const charge = item.student_charges || {};
-    const student = charge.students || {};
+    const student = item.students || {};
     const className = student.classes?.name || "-";
     const courseName = student.classes?.courses?.name || "-";
+    const methodValue = item.method || item.payment_method;
 
     return `
       <tr>
@@ -167,7 +171,7 @@ function renderTable() {
         <td>${getChargeTypeLabel(charge.charge_type)}</td>
         <td>${formatMoney(item.amount)}</td>
         <td>${item.payment_date || "-"}</td>
-        <td>${getMethodLabel(item.method)}</td>
+        <td>${getMethodLabel(methodValue)}</td>
         <td>${item.reference || "-"}</td>
       </tr>
     `;
