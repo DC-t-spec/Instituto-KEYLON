@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>KEYLON | Pagamentos</title>
+
+  <link rel="stylesheet" href="./assets/css/tokens.css" />
+  <link rel="stylesheet" href="./assets/css/base.css" />
+  <link rel="stylesheet" href="./assets/css/layout.css" />
+  <link rel="stylesheet" href="./assets/css/components.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <span class="brand-badge">KEYLON</span>
+        <h2>Instituto</h2>
+      </div>
+
+      <nav class="sidebar-nav">
+        <a href="./dashboard.html" class="nav-link">Dashboard</a>
+        <a href="./alunos.html" class="nav-link">Alunos</a>
+        <a href="./cursos.html" class="nav-link">Cursos</a>
+        <a href="./turmas.html" class="nav-link">Turmas</a>
+        <a href="./cobrancas.html" class="nav-link">Cobranças</a>
+        <a href="./pagamentos.html" class="nav-link active">Pagamentos</a>
+        <a href="#" class="nav-link is-disabled">Dívidas</a>
+      </nav>
+
+      <button id="logout-btn" class="btn btn-ghost sidebar-logout">
+        Terminar sessão
+      </button>
+    </aside>
+
+    <div class="app-main">
+      <header class="topbar">
+        <div>
+          <h1>Pagamentos</h1>
+          <p class="page-subtitle">Histórico de pagamentos registados</p>
+        </div>
+
+        <div class="topbar-user">
+          <span id="user-name">Utilizador</span>
+        </div>
+      </header>
+
+      <main class="page-content">
+        <section class="stats-grid">
+          <div class="stat-card">
+            <span class="stat-label">Total de pagamentos</span>
+            <strong class="stat-value" id="payments-count">0</strong>
+          </div>
+
+          <div class="stat-card">
+            <span class="stat-label">Total recebido</span>
+            <strong class="stat-value" id="payments-total">0</strong>
+          </div>
+
+          <div class="stat-card">
+            <span class="stat-label">Recebido hoje</span>
+            <strong class="stat-value" id="payments-today">0</strong>
+          </div>
+
+          <div class="stat-card stat-card-highlight">
+            <span class="stat-label">Métodos usados</span>
+            <strong class="stat-value" id="payments-methods">0</strong>
+          </div>
+        </section>
+
+        <article class="panel">
+          <div class="panel-header panel-header-inline">
+            <h3>Lista de pagamentos</h3>
+
+            <div class="toolbar">
+              <input
+                type="text"
+                id="paymentSearch"
+                placeholder="Pesquisar por aluno, turma, curso ou referência"
+                class="search-input"
+              />
+
+              <select id="paymentMethodFilter">
+                <option value="">Método</option>
+                <option value="cash">Dinheiro</option>
+                <option value="mpesa">M-Pesa</option>
+                <option value="bank">Banco</option>
+                <option value="card">Cartão</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Aluno</th>
+                  <th>Nº</th>
+                  <th>Curso</th>
+                  <th>Turma</th>
+                  <th>Cobrança</th>
+                  <th>Tipo</th>
+                  <th>Valor pago</th>
+                  <th>Data</th>
+                  <th>Método</th>
+                  <th>Referência</th>
+                </tr>
+              </thead>
+              <tbody id="paymentsTableBody">
+                <tr>
+                  <td colspan="10" class="empty-cell">A carregar pagamentos...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </article>
+      </main>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initPaymentsPage } from "./assets/js/modules/pagamentos.js";
+
+    document.addEventListener("DOMContentLoaded", () => {
+      initPaymentsPage();
+    });
+  </script>
+</body>
+</html>
