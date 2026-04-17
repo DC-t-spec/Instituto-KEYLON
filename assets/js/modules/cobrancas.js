@@ -462,9 +462,11 @@ async function registerPayment({ chargeId, amount, paymentDate, method, referenc
   const { error } = await supabase
     .from("payments")
     .insert([{
+      student_id: charge.student_id,
       charge_id: chargeId,
       amount: numericAmount,
       payment_date: paymentDate || null,
+      payment_method: method || null,
       method: method || null,
       reference: reference || null,
       notes: notes || null
