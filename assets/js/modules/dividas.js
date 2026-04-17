@@ -1,77 +1,87 @@
 import { supabase } from "../config/supabase.js";
 
-const tableBodyId = "dividas-table-body";
-const searchId = "search-dividas";
-const statusFilterId = "filter-status";
-
-let dividasData = [];
+let data = [];
 
 export async function initDividas() {
-  await loadDividas();
-  setupEvents();
+  await load();
+  setup();
 }
 
-async function loadDividas() {
-  const { data, error } = await supabase
-    .from("v_student_debts")
+async function load() {
+  const { data: rows, error } = await supabase
+    .from("v_student_debt_summary")
     .select("*")
-    .order("due_date", { ascending: true });
+    .order("total_debt", { ascending: false });
 
   if (error) {
-    console.error("Erro ao carregar dívidas:", error);
+    console.error(error);
     return;
   }
 
-  dividasData = data || [];
-  renderDividas(dividasData);
+  data = rows || [];
+  renderCards();
+  renderTable(data);
 }
 
-function renderDividas(rows) {
-  const tbody = document.getElementById(tableBodyId);
+function renderCards() {
+  const totalDebt = sum(data, "total_debt");
+  const totalPaid = sum(data, "total_paid");
+  const totalStudents = data.length;
+  const overdueStudents = data.filter(d => d.overdue_count > 0).length;
+
+  document.getElementById("cards").innerHTML = `
+    <div class="stat-card">💰 Dívida Total<br><strong>${fmt(totalDebt)}</strong></div>
+    <div class="stat-card">✅ Pago<br><strong>${fmt(totalPaid)}</strong></div>
+    <div class="stat-card">👥 Devedores<br><strong>${totalStudents}</strong></div>
+    <div class="stat-card">⚠️ Atrasados<br><strong>${overdueStudents}</strong></div>
+  `;
+}
+
+function renderTable(rows) {
+  const tbody = document.getElementById("dividas-table-body");
 
   if (!rows.length) {
-    tbody.innerHTML = `<tr><td colspan="8" class="empty-cell">Sem dívidas</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="7" class="empty-cell">Sem dados</td></tr>`;
     return;
   }
 
   tbody.innerHTML = rows.map(r => `
-    <tr class="${r.debt_status}">
-      <td>${r.student_name}</td>
+    <tr>
+      <td>${r.full_name}</td>
       <td>${r.course_name || "-"}</td>
       <td>${r.class_name || "-"}</td>
-      <td>${format(r.final_amount)}</td>
-      <td>${format(r.paid_amount)}</td>
-      <td class="text-danger">${format(r.debt_amount)}</td>
-      <td>${badge(r.debt_status)}</td>
-      <td>${r.due_date || "-"}</td>
+      <td>${fmt(r.total_charged)}</td>
+      <td>${fmt(r.total_paid)}</td>
+      <td class="text-danger">${fmt(r.total_debt)}</td>
+      <td>${badge(r)}</td>
     </tr>
   `).join("");
 }
 
-function setupEvents() {
-  document.getElementById(searchId)?.addEventListener("input", applyFilters);
-  document.getElementById(statusFilterId)?.addEventListener("change", applyFilters);
+function setup() {
+  document.getElementById("search")?.addEventListener("input", filter);
 }
 
-function applyFilters() {
-  const search = document.getElementById(searchId).value.toLowerCase();
-  const status = document.getElementById(statusFilterId).value;
+function filter(e) {
+  const q = e.target.value.toLowerCase();
 
-  const filtered = dividasData.filter(r => {
-    const matchSearch = r.student_name.toLowerCase().includes(search);
-    const matchStatus = !status || r.debt_status === status;
-    return matchSearch && matchStatus;
-  });
+  const filtered = data.filter(d =>
+    d.full_name.toLowerCase().includes(q)
+  );
 
-  renderDividas(filtered);
+  renderTable(filtered);
 }
 
-function format(v) {
+function sum(arr, field) {
+  return arr.reduce((a, b) => a + Number(b[field] || 0), 0);
+}
+
+function fmt(v) {
   return Number(v || 0).toLocaleString("pt-MZ") + " MZN";
 }
 
-function badge(status) {
-  if (status === "paid") return `<span class="badge green">Pago</span>`;
-  if (status === "overdue") return `<span class="badge red">Atrasado</span>`;
+function badge(r) {
+  if (r.total_debt === 0) return `<span class="badge green">Sem dívida</span>`;
+  if (r.overdue_count > 0) return `<span class="badge red">Atrasado</span>`;
   return `<span class="badge yellow">Pendente</span>`;
 }
