@@ -24,7 +24,7 @@
         <a href="./cursos.html" class="nav-link">Cursos</a>
         <a href="./turmas.html" class="nav-link">Turmas</a>
         <a href="./cobrancas.html" class="nav-link active">Cobranças</a>
-        <a href="#" class="nav-link is-disabled">Pagamentos</a>
+        <a href="./pagamentos.html" class="nav-link">Pagamentos</a>
         <a href="#" class="nav-link is-disabled">Dívidas</a>
       </nav>
 
@@ -296,17 +296,79 @@
                   <th>Pago</th>
                   <th>Saldo</th>
                   <th>Estado</th>
+                  <th>Ações</th>
                 </tr>
               </thead>
               <tbody id="chargesTableBody">
                 <tr>
-                  <td colspan="11" class="empty-cell">A carregar cobranças...</td>
+                  <td colspan="12" class="empty-cell">A carregar cobranças...</td>
                 </tr>
               </tbody>
             </table>
           </div>
         </article>
       </main>
+    </div>
+  </div>
+
+  <div id="payment-modal" class="hidden" style="position:fixed; inset:0; background:rgba(15,23,42,0.45); z-index:1000; display:flex; align-items:center; justify-content:center; padding:24px;">
+    <div style="width:100%; max-width:560px; background:#fff; border-radius:16px; box-shadow:var(--shadow); overflow:hidden;">
+      <div class="panel-header panel-header-inline">
+        <h3>Registar pagamento</h3>
+        <button type="button" id="close-payment-modal" class="btn btn-secondary btn-sm">Fechar</button>
+      </div>
+
+      <div class="panel-body">
+        <form id="paymentForm" class="form-grid">
+          <input type="hidden" id="payment-charge-id" />
+
+          <div class="form-group form-group-full">
+            <label>Cobrança</label>
+            <input id="payment-charge-title" type="text" readonly />
+          </div>
+
+          <div class="form-group">
+            <label>Saldo actual</label>
+            <input id="payment-current-balance" type="text" readonly />
+          </div>
+
+          <div class="form-group">
+            <label>Valor a pagar</label>
+            <input id="payment-amount" name="amount" type="number" min="0.01" step="0.01" required />
+          </div>
+
+          <div class="form-group">
+            <label>Data do pagamento</label>
+            <input id="payment-date" name="payment_date" type="date" />
+          </div>
+
+          <div class="form-group">
+            <label>Método</label>
+            <select id="payment-method" name="method">
+              <option value="">Selecionar</option>
+              <option value="cash">Dinheiro</option>
+              <option value="mpesa">M-Pesa</option>
+              <option value="bank">Banco</option>
+              <option value="card">Cartão</option>
+            </select>
+          </div>
+
+          <div class="form-group form-group-full">
+            <label>Referência</label>
+            <input id="payment-reference" name="reference" type="text" />
+          </div>
+
+          <div class="form-group form-group-full">
+            <label>Observações</label>
+            <textarea id="payment-notes" name="notes" rows="3"></textarea>
+          </div>
+
+          <div class="form-actions form-group-full">
+            <button type="submit" class="btn btn-primary">Confirmar pagamento</button>
+            <button type="button" id="cancel-payment-btn" class="btn btn-secondary">Cancelar</button>
+          </div>
+        </form>
+      </div>
     </div>
   </div>
 
