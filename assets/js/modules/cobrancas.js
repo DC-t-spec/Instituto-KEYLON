@@ -4,6 +4,7 @@ const chargesState = {
   charges: [],
   students: [],
   classes: [],
+  selectedCharge: null,
   filters: {
     search: "",
     month: "",
@@ -34,6 +35,14 @@ function getChargeTypeLabel(type) {
 function getChargeReference(month, year) {
   if (!month || !year) return "-";
   return `${String(month).padStart(2, "0")}/${year}`;
+}
+
+function getStatusLabel(status) {
+  if (status === "pending") return "Pendente";
+  if (status === "partial") return "Parcial";
+  if (status === "paid") return "Pago";
+  if (status === "cancelled") return "Cancelado";
+  return status || "-";
 }
 
 async function fetchStudentsForCharges() {
@@ -126,20 +135,21 @@ function populateClassSelect() {
 
 function populateYearFilter() {
   const yearSelect = el("chargeYear");
-  if (!yearSelect) return;
+  if (yearSelect) {
+    const currentYear = new Date().getFullYear();
+    yearSelect.innerHTML = `<option value="">Ano</option>`;
 
-  const currentYear = new Date().getFullYear();
-  yearSelect.innerHTML = `<option value="">Ano</option>`;
-
-  for (let year = currentYear + 1; year >= currentYear - 5; year -= 1) {
-    yearSelect.innerHTML += `<option value="${year}">${year}</option>`;
+    for (let year = currentYear + 1; year >= currentYear - 5; year -= 1) {
+      yearSelect.innerHTML += `<option value="${year}">${year}</option>`;
+    }
   }
 
-  const chargeYearInput = el("charge-year");
-  const bulkYearInput = el("bulk-year");
+  const currentYear = new Date().getFullYear();
+  if (el("charge-year") && !el("charge-year").value) el("charge-year").value = currentYear;
+  if (el("bulk-year") && !el("bulk-year").value) el("bulk-year").value = currentYear;
 
-  if (chargeYearInput && !chargeYearInput.value) chargeYearInput.value = currentYear;
-  if (bulkYearInput && !bulkYearInput.value) bulkYearInput.value = currentYear;
+  const today = new Date().toISOString().split("T")[0];
+  if (el("payment-date") && !el("payment-date").value) el("payment-date").value = today;
 }
 
 async function fetchCharges() {
@@ -270,7 +280,7 @@ function renderChargesTable() {
   if (!chargesState.charges.length) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="11" class="empty-cell">Nenhuma cobrança encontrada.</td>
+        <td colspan="12" class="empty-cell">Nenhuma cobrança encontrada.</td>
       </tr>
     `;
     return;
@@ -280,6 +290,7 @@ function renderChargesTable() {
     const student = item.students || {};
     const className = student.classes?.name || "-";
     const courseName = student.classes?.courses?.name || "-";
+    const canPay = item.status !== "paid" && item.status !== "cancelled" && Number(item.balance || 0) > 0;
 
     return `
       <tr>
@@ -293,7 +304,13 @@ function renderChargesTable() {
         <td>${formatMoney(item.final_amount)}</td>
         <td>${formatMoney(item.paid_amount)}</td>
         <td>${formatMoney(item.balance)}</td>
-        <td>${item.status || "-"}</td>
+        <td>${getStatusLabel(item.status)}</td>
+        <td>
+          <div class="table-actions">
+            ${canPay ? `<button type="button" class="btn btn-primary btn-sm" onclick="openPaymentModal('${item.id}')">Pagar</button>` : ""}
+            <a href="./pagamentos.html?charge_id=${item.id}" class="btn btn-secondary btn-sm">Histórico</a>
+          </div>
+        </td>
       </tr>
     `;
   }).join("");
@@ -302,18 +319,9 @@ function renderChargesTable() {
 function buildChargeTitle(type, month, year, customTitle) {
   if (customTitle?.trim()) return customTitle.trim();
 
-  if (type === "monthly_fee") {
-    return `Mensalidade ${String(month).padStart(2, "0")}/${year}`;
-  }
-
-  if (type === "registration_fee") {
-    return `Pagamento de ficha ${String(month).padStart(2, "0")}/${year}`;
-  }
-
-  if (type === "test_fee") {
-    return `Pagamento de teste ${String(month).padStart(2, "0")}/${year}`;
-  }
-
+  if (type === "monthly_fee") return `Mensalidade ${String(month).padStart(2, "0")}/${year}`;
+  if (type === "registration_fee") return `Pagamento de ficha ${String(month).padStart(2, "0")}/${year}`;
+  if (type === "test_fee") return `Pagamento de teste ${String(month).padStart(2, "0")}/${year}`;
   return `Cobrança ${String(month).padStart(2, "0")}/${year}`;
 }
 
@@ -369,7 +377,7 @@ async function generateBulkCharges({
 }) {
   const { data: students, error: studentsError } = await supabase
     .from("students")
-    .select("id, full_name, class_id, status")
+    .select("id, class_id, status")
     .eq("class_id", classId)
     .eq("status", "active");
 
@@ -399,6 +407,68 @@ async function generateBulkCharges({
   const { error } = await supabase
     .from("student_charges")
     .insert(payload);
+
+  if (error) throw error;
+}
+
+function openPaymentModalInternal(chargeId) {
+  const charge = chargesState.charges.find((item) => item.id === chargeId);
+  if (!charge) return;
+
+  chargesState.selectedCharge = charge;
+
+  el("payment-charge-id").value = charge.id;
+  el("payment-charge-title").value = `${charge.students?.full_name || "-"} - ${charge.title || "-"}`;
+  el("payment-current-balance").value = formatMoney(charge.balance || 0);
+  el("payment-amount").value = Number(charge.balance || 0) > 0 ? Number(charge.balance).toFixed(2) : "";
+  el("payment-reference").value = "";
+  el("payment-notes").value = "";
+  el("payment-method").value = "";
+  if (!el("payment-date").value) {
+    el("payment-date").value = new Date().toISOString().split("T")[0];
+  }
+
+  el("payment-modal").classList.remove("hidden");
+}
+
+function closePaymentModal() {
+  chargesState.selectedCharge = null;
+  el("payment-modal").classList.add("hidden");
+  const form = el("paymentForm");
+  if (form) form.reset();
+}
+
+window.openPaymentModal = (chargeId) => {
+  openPaymentModalInternal(chargeId);
+};
+
+async function registerPayment({ chargeId, amount, paymentDate, method, reference, notes }) {
+  const numericAmount = Number(amount || 0);
+
+  if (numericAmount <= 0) {
+    throw new Error("O valor de pagamento deve ser maior que zero.");
+  }
+
+  const charge = chargesState.charges.find((item) => item.id === chargeId);
+  if (!charge) {
+    throw new Error("Cobrança não encontrada.");
+  }
+
+  const currentBalance = Number(charge.balance || 0);
+  if (numericAmount > currentBalance) {
+    throw new Error("O valor não pode ser superior ao saldo da cobrança.");
+  }
+
+  const { error } = await supabase
+    .from("payments")
+    .insert([{
+      charge_id: chargeId,
+      amount: numericAmount,
+      payment_date: paymentDate || null,
+      method: method || null,
+      reference: reference || null,
+      notes: notes || null
+    }]);
 
   if (error) throw error;
 }
@@ -534,7 +604,58 @@ function bindBulkGenerateForm() {
   });
 }
 
-async function initChargesPage() {
+function bindPaymentModal() {
+  const form = el("paymentForm");
+  const closeBtn = el("close-payment-modal");
+  const cancelBtn = el("cancel-payment-btn");
+  const modal = el("payment-modal");
+
+  if (closeBtn) {
+    closeBtn.addEventListener("click", closePaymentModal);
+  }
+
+  if (cancelBtn) {
+    cancelBtn.addEventListener("click", closePaymentModal);
+  }
+
+  if (modal) {
+    modal.addEventListener("click", (event) => {
+      if (event.target === modal) {
+        closePaymentModal();
+      }
+    });
+  }
+
+  if (form) {
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+
+      const formData = new FormData(form);
+
+      try {
+        await registerPayment({
+          chargeId: el("payment-charge-id").value,
+          amount: formData.get("amount"),
+          paymentDate: formData.get("payment_date"),
+          method: formData.get("method"),
+          reference: formData.get("reference"),
+          notes: formData.get("notes")
+        });
+
+        closePaymentModal();
+        await fetchCharges();
+        renderDashboardCards();
+        renderChargesTable();
+        alert("Pagamento registado com sucesso.");
+      } catch (error) {
+        console.error(error);
+        alert(error.message || "Erro ao registar pagamento.");
+      }
+    });
+  }
+}
+
+export async function initChargesPage() {
   populateYearFilter();
   await fetchStudentsForCharges();
   await fetchClassesForBulk();
@@ -546,8 +667,5 @@ async function initChargesPage() {
   bindChargeFilters();
   bindCreateChargeForm();
   bindBulkGenerateForm();
+  bindPaymentModal();
 }
-
-export {
-  initChargesPage
-};
