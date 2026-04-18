@@ -10,8 +10,11 @@
   <link rel="stylesheet" href="./assets/css/layout.css" />
   <link rel="stylesheet" href="./assets/css/components.css" />
 </head>
+
 <body>
   <div class="app-shell">
+
+    <!-- SIDEBAR -->
     <aside class="sidebar">
       <div class="sidebar-brand">
         <span class="brand-badge">KEYLON</span>
@@ -33,46 +36,56 @@
       </button>
     </aside>
 
+    <!-- MAIN -->
     <div class="app-main">
+
       <div id="mobile-backdrop" class="mobile-backdrop"></div>
+
+      <!-- TOPBAR -->
       <header class="topbar">
         <div>
           <h1>Dívidas</h1>
           <p class="page-subtitle">Resumo financeiro por aluno</p>
         </div>
 
-    <div class="topbar-actions">
-  <button id="menu-toggle" class="menu-toggle" type="button">☰ Menu</button>
+        <div class="topbar-actions">
+          <button id="menu-toggle" class="menu-toggle" type="button">
+            ☰ Menu
+          </button>
 
-  <div class="topbar-user">
-    <span id="user-name">Utilizador</span>
-  </div>
-</div>
+          <div class="topbar-user">
+            <span id="user-name">Utilizador</span>
+          </div>
+        </div>
       </header>
 
+      <!-- CONTENT -->
       <main class="page-content">
-        <section class="stats-grid" id="cards">
+
+        <!-- STATS -->
+        <section class="stats-grid">
           <div class="stat-card">
             <span class="stat-label">Dívida total</span>
-            <strong class="stat-value">0</strong>
+            <strong class="stat-value" id="total-debt">0</strong>
           </div>
 
           <div class="stat-card">
             <span class="stat-label">Total pago</span>
-            <strong class="stat-value">0</strong>
+            <strong class="stat-value" id="total-paid">0</strong>
           </div>
 
           <div class="stat-card">
             <span class="stat-label">Devedores</span>
-            <strong class="stat-value">0</strong>
+            <strong class="stat-value" id="total-debtors">0</strong>
           </div>
 
           <div class="stat-card stat-card-highlight">
             <span class="stat-label">Atrasados</span>
-            <strong class="stat-value">0</strong>
+            <strong class="stat-value" id="total-overdue">0</strong>
           </div>
         </section>
 
+        <!-- TABLE -->
         <article class="panel">
           <div class="panel-header panel-header-inline">
             <h3>Lista de devedores</h3>
@@ -100,26 +113,32 @@
                   <th>Estado</th>
                 </tr>
               </thead>
+
               <tbody id="dividas-table-body">
                 <tr>
-                  <td colspan="7" class="empty-cell">A carregar dívidas...</td>
+                  <td colspan="7" class="empty-cell">
+                    A carregar dívidas...
+                  </td>
                 </tr>
               </tbody>
             </table>
           </div>
         </article>
+
       </main>
     </div>
   </div>
 
+  <!-- SCRIPTS -->
   <script type="module">
     import { initDividas } from "./assets/js/modules/dividas.js";
-     import { initMobileSidebar } from "./assets/js/core/mobile-sidebar.js";
+    import { initMobileSidebar } from "./assets/js/core/mobile-sidebar.js";
 
     document.addEventListener("DOMContentLoaded", () => {
       initMobileSidebar();
       initDividas();
     });
   </script>
+
 </body>
 </html>
