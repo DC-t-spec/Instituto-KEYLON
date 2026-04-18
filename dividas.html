@@ -114,8 +114,10 @@
 
   <script type="module">
     import { initDividas } from "./assets/js/modules/dividas.js";
+     import { initMobileSidebar } from "./assets/js/core/mobile-sidebar.js";
 
     document.addEventListener("DOMContentLoaded", () => {
+      initMobileSidebar();
       initDividas();
     });
   </script>
