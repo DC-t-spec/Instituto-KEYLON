@@ -90,7 +90,7 @@ async function loadDividas() {
   `;
 
   const { data, error } = await supabase
-    .from("student_debts_view")
+    .from("v_student_debts")
     .select("*")
     .order("debt", { ascending: false });
 
