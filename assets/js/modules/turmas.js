@@ -1,269 +1,253 @@
 import { supabase } from "../config/supabase.js";
 
-const state = {
-  classes: [],
-  courses: [],
-  search: ""
-};
+const els = {};
 
-function el(id) {
-  return document.getElementById(id);
+function getEls() {
+  els.search = document.getElementById("search-turmas");
+  els.newBtn = document.getElementById("btn-nova-turma");
+  els.cancelBtn = document.getElementById("btn-cancelar-turma");
+  els.formContainer = document.getElementById("turma-form-container");
+  els.form = document.getElementById("turma-form");
+  els.tableBody = document.getElementById("turmas-table-body");
+
+  els.id = document.getElementById("turma-id");
+  els.courseId = document.getElementById("turma-curso-id");
+  els.name = document.getElementById("turma-nome");
+  els.code = document.getElementById("turma-codigo");
+  els.period = document.getElementById("turma-periodo");
+  els.year = document.getElementById("turma-ano");
+  els.capacity = document.getElementById("turma-capacidade");
+  els.startDate = document.getElementById("turma-data-inicio");
+  els.endDate = document.getElementById("turma-data-fim");
+  els.status = document.getElementById("turma-status");
 }
 
-function showForm() {
-  const container = el("turma-form-container");
-  if (container) container.classList.remove("hidden");
+function toggleForm(show) {
+  if (!els.formContainer) return;
+  els.formContainer.classList.toggle("hidden", !show);
 }
 
-function hideForm() {
-  const container = el("turma-form-container");
-  if (container) container.classList.add("hidden");
+function clearForm() {
+  if (els.id) els.id.value = "";
+  if (els.courseId) els.courseId.value = "";
+  if (els.name) els.name.value = "";
+  if (els.code) els.code.value = "";
+  if (els.period) els.period.value = "";
+  if (els.year) els.year.value = "";
+  if (els.capacity) els.capacity.value = "0";
+  if (els.startDate) els.startDate.value = "";
+  if (els.endDate) els.endDate.value = "";
+  if (els.status) els.status.value = "active";
 }
 
-function resetForm() {
-  const form = el("turma-form");
-  if (form) form.reset();
-
-  if (el("turma-id")) el("turma-id").value = "";
-
-  const statusEl = el("turma-status");
-  if (statusEl) statusEl.value = "active";
-}
-
-async function fetchCourses() {
-  const { data, error } = await supabase
-    .from("courses")
-    .select("id, name")
-    .eq("status", "active")
-    .order("name", { ascending: true });
-
-  if (error) {
-    console.error("Erro ao carregar cursos:", error.message);
-    state.courses = [];
-    return;
-  }
-
-  state.courses = data || [];
-
-  const select = el("turma-curso-id");
-  if (!select) return;
-
-  select.innerHTML = `
-    <option value="">Selecionar curso</option>
-    ${state.courses.map(course => `
-      <option value="${course.id}">${course.name}</option>
-    `).join("")}
-  `;
-}
-
-async function fetchClasses() {
-  const { data, error } = await supabase
-    .from("classes")
-    .select(`
-      *,
-      courses (
-        id,
-        name
-      )
-    `)
-    .order("created_at", { ascending: false });
-
-  if (error) {
-    console.error("Erro ao carregar turmas:", error.message);
-    state.classes = [];
-    render();
-    return;
-  }
-
-  state.classes = data || [];
-  render();
-}
-
-function render() {
-  const tbody = el("turmas-table-body");
-  if (!tbody) return;
-
-  let rows = [...state.classes];
-
-  if (state.search.trim()) {
-    const term = state.search.trim().toLowerCase();
-
-    rows = rows.filter((item) => {
-      const name = item.name?.toLowerCase() || "";
-      const course = item.courses?.name?.toLowerCase() || "";
-      const period = item.period?.toLowerCase() || "";
-      const year = String(item.year || "").toLowerCase();
-
-      return (
-        name.includes(term) ||
-        course.includes(term) ||
-        period.includes(term) ||
-        year.includes(term)
-      );
-    });
-  }
+function renderTurmas(rows) {
+  if (!els.tableBody) return;
 
   if (!rows.length) {
-    tbody.innerHTML = `
+    els.tableBody.innerHTML = `
       <tr>
-        <td colspan="7" class="empty-cell">Nenhuma turma encontrada.</td>
+        <td colspan="7" class="empty-cell">Sem turmas registadas.</td>
       </tr>
     `;
     return;
   }
 
-  tbody.innerHTML = rows.map((t) => `
-    <tr>
-      <td>${t.name || "-"}</td>
-      <td>${t.courses?.name || "-"}</td>
-      <td>${t.period || "-"}</td>
-      <td>${t.year || "-"}</td>
-      <td>${t.capacity ?? "-"}</td>
-      <td>${t.status || "-"}</td>
-      <td>
-        <div class="table-actions">
-          <button type="button" class="btn btn-secondary btn-sm" onclick="editClass('${t.id}')">
-            Editar
-          </button>
-          <button type="button" class="btn btn-danger btn-sm" onclick="deleteClass('${t.id}')">
-            Eliminar
-          </button>
-        </div>
-      </td>
-    </tr>
-  `).join("");
+  els.tableBody.innerHTML = rows
+    .map(
+      (row) => `
+        <tr>
+          <td>${row.name || "-"}</td>
+          <td>${row.course_name || "-"}</td>
+          <td>${row.period || "-"}</td>
+          <td>${row.year || "-"}</td>
+          <td>${row.capacity ?? 0}</td>
+          <td>${formatStatus(row.status)}</td>
+          <td>
+            <button class="btn btn-secondary btn-sm" data-edit-id="${row.id}">Editar</button>
+          </td>
+        </tr>
+      `
+    )
+    .join("");
 }
 
-window.editClass = (id) => {
-  const turma = state.classes.find((item) => item.id === id);
-  if (!turma) return;
+function formatStatus(status) {
+  if (status === "active") return "Activo";
+  if (status === "closed") return "Fechado";
+  if (status === "cancelled") return "Cancelado";
+  return status || "-";
+}
 
-  showForm();
+async function loadCoursesOptions() {
+  if (!els.courseId) return;
 
-  if (el("turma-id")) el("turma-id").value = turma.id;
-  if (el("turma-nome")) el("turma-nome").value = turma.name || "";
-  if (el("turma-curso-id")) el("turma-curso-id").value = turma.course_id || "";
-  if (el("turma-codigo")) el("turma-codigo").value = turma.code || "";
-  if (el("turma-periodo")) el("turma-periodo").value = turma.period || "";
-  if (el("turma-ano")) el("turma-ano").value = turma.year || "";
-  if (el("turma-capacidade")) el("turma-capacidade").value = turma.capacity ?? 0;
-  if (el("turma-data-inicio")) el("turma-data-inicio").value = turma.start_date || "";
-  if (el("turma-data-fim")) el("turma-data-fim").value = turma.end_date || "";
-  if (el("turma-status")) el("turma-status").value = turma.status || "active";
-};
-
-window.deleteClass = async (id) => {
-  const confirmed = confirm("Eliminar turma?");
-  if (!confirmed) return;
-
-  const { error } = await supabase
-    .from("classes")
-    .delete()
-    .eq("id", id);
+  const { data, error } = await supabase
+    .from("courses")
+    .select("id, name")
+    .order("name");
 
   if (error) {
-    console.error("Erro ao eliminar turma:", error.message);
-    alert("Não foi possível eliminar a turma.");
+    console.error("Erro ao carregar cursos:", error);
     return;
   }
 
-  await fetchClasses();
-};
+  els.courseId.innerHTML = `
+    <option value="">Selecionar curso</option>
+    ${(data || [])
+      .map((course) => `<option value="${course.id}">${course.name}</option>`)
+      .join("")}
+  `;
+}
 
-async function save(event) {
+async function loadTurmas() {
+  if (!els.tableBody) return;
+
+  els.tableBody.innerHTML = `
+    <tr>
+      <td colspan="7" class="empty-cell">A carregar turmas...</td>
+    </tr>
+  `;
+
+  const { data, error } = await supabase
+    .from("classes_with_course_view")
+    .select("*")
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("Erro ao carregar turmas:", error);
+    els.tableBody.innerHTML = `
+      <tr>
+        <td colspan="7" class="empty-cell">Erro ao carregar turmas.</td>
+      </tr>
+    `;
+    return;
+  }
+
+  const term = (els.search?.value || "").trim().toLowerCase();
+
+  const filtered = (data || []).filter((row) => {
+    if (!term) return true;
+
+    return (
+      (row.name || "").toLowerCase().includes(term) ||
+      (row.course_name || "").toLowerCase().includes(term) ||
+      (row.period || "").toLowerCase().includes(term) ||
+      String(row.year || "").toLowerCase().includes(term)
+    );
+  });
+
+  renderTurmas(filtered);
+}
+
+async function handleSubmit(event) {
   event.preventDefault();
 
-  const id = el("turma-id")?.value || "";
-
   const payload = {
-    name: el("turma-nome")?.value?.trim() || "",
-    course_id: el("turma-curso-id")?.value || null,
-    code: el("turma-codigo")?.value?.trim() || null,
-    period: el("turma-periodo")?.value?.trim() || null,
-    year: el("turma-ano")?.value ? Number(el("turma-ano").value) : null,
-    capacity: el("turma-capacidade")?.value ? Number(el("turma-capacidade").value) : 0,
-    start_date: el("turma-data-inicio")?.value || null,
-    end_date: el("turma-data-fim")?.value || null,
-    status: el("turma-status")?.value || "active"
+    course_id: els.courseId?.value || null,
+    name: els.name?.value?.trim() || null,
+    code: els.code?.value?.trim() || null,
+    period: els.period?.value?.trim() || null,
+    year: els.year?.value ? Number(els.year.value) : null,
+    capacity: els.capacity?.value ? Number(els.capacity.value) : 0,
+    start_date: els.startDate?.value || null,
+    end_date: els.endDate?.value || null,
+    status: els.status?.value || "active",
   };
 
-  if (!payload.name) {
-    alert("Preenche o nome da turma.");
+  if (!payload.course_id || !payload.name) {
+    alert("Preencha curso e nome da turma.");
     return;
   }
 
-  if (!payload.course_id) {
-    alert("Seleciona o curso.");
-    return;
-  }
+  const editingId = els.id?.value;
 
-  let error = null;
+  let error;
 
-  if (id) {
-    const response = await supabase
+  if (editingId) {
+    ({ error } = await supabase
       .from("classes")
       .update(payload)
-      .eq("id", id);
-
-    error = response.error;
+      .eq("id", editingId));
   } else {
-    const response = await supabase
-      .from("classes")
-      .insert([payload]);
-
-    error = response.error;
+    ({ error } = await supabase.from("classes").insert([payload]));
   }
 
   if (error) {
-    console.error("Erro ao guardar turma:", error.message);
-    alert(error.message || "Erro ao guardar turma.");
+    console.error("Erro ao guardar turma:", error);
+    alert("Erro ao guardar turma.");
     return;
   }
 
-  resetForm();
-  hideForm();
-  await fetchClasses();
+  clearForm();
+  toggleForm(false);
+  await loadTurmas();
 }
 
-function bindEvents() {
-  const form = el("turma-form");
-  const btnNova = el("btn-nova-turma");
-  const btnCancelar = el("btn-cancelar-turma");
-  const searchInput = el("search-turmas");
+async function handleTableClick(event) {
+  const editBtn = event.target.closest("[data-edit-id]");
+  if (!editBtn) return;
 
-  if (form) {
-    form.addEventListener("submit", save);
+  const id = editBtn.getAttribute("data-edit-id");
+
+  const { data, error } = await supabase
+    .from("classes")
+    .select("*")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (error || !data) {
+    console.error("Erro ao carregar turma:", error);
+    return;
   }
 
-  if (btnNova) {
-    btnNova.addEventListener("click", () => {
-      resetForm();
-      showForm();
+  if (els.id) els.id.value = data.id || "";
+  if (els.courseId) els.courseId.value = data.course_id || "";
+  if (els.name) els.name.value = data.name || "";
+  if (els.code) els.code.value = data.code || "";
+  if (els.period) els.period.value = data.period || "";
+  if (els.year) els.year.value = data.year || "";
+  if (els.capacity) els.capacity.value = data.capacity ?? 0;
+  if (els.startDate) els.startDate.value = data.start_date || "";
+  if (els.endDate) els.endDate.value = data.end_date || "";
+  if (els.status) els.status.value = data.status || "active";
+
+  toggleForm(true);
+}
+
+export async function initTurmasPage() {
+  getEls();
+
+  if (!els.tableBody) {
+    console.error("Elemento #turmas-table-body não encontrado.");
+    return;
+  }
+
+  if (els.newBtn) {
+    els.newBtn.addEventListener("click", () => {
+      clearForm();
+      toggleForm(true);
     });
   }
 
-  if (btnCancelar) {
-    btnCancelar.addEventListener("click", () => {
-      resetForm();
-      hideForm();
+  if (els.cancelBtn) {
+    els.cancelBtn.addEventListener("click", () => {
+      clearForm();
+      toggleForm(false);
     });
   }
 
-  if (searchInput) {
-    searchInput.addEventListener("input", (event) => {
-      state.search = event.target.value || "";
-      render();
-    });
+  if (els.search) {
+    els.search.addEventListener("input", loadTurmas);
   }
-}
 
-export async function initClassesPage() {
-  bindEvents();
-  await fetchCourses();
-  await fetchClasses();
-}
-export function initTurmasPage() {
-  console.log("Turmas page carregada");
+  if (els.form) {
+    els.form.addEventListener("submit", handleSubmit);
+  }
 
- 
+  if (els.tableBody) {
+    els.tableBody.addEventListener("click", handleTableClick);
+  }
+
+  await loadCoursesOptions();
+  await loadTurmas();
 }
