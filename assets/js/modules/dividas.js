@@ -1,173 +1,127 @@
 import { supabase } from "../config/supabase.js";
 
-const cardsEl = document.getElementById("cards");
-const tableBodyEl = document.getElementById("dividas-table-body");
-const searchEl = document.getElementById("search");
+const els = {};
 
-let rowsData = [];
-
-export async function initDividas() {
-  await loadDividas();
-  setupEvents();
+function getEls() {
+  els.totalDebt = document.getElementById("total-debt");
+  els.totalPaid = document.getElementById("total-paid");
+  els.totalDebtors = document.getElementById("total-debtors");
+  els.totalOverdue = document.getElementById("total-overdue");
+  els.search = document.getElementById("search");
+  els.tableBody = document.getElementById("dividas-table-body");
 }
 
-async function loadDividas() {
-  const { data, error } = await supabase
-    .from("v_student_debt_summary")
-    .select("*")
-    .order("total_debt", { ascending: false });
-
-  if (error) {
-    console.error("Erro ao carregar dívidas:", error);
-    tableBodyEl.innerHTML = `
-      <tr>
-        <td colspan="8" class="empty-cell">Erro ao carregar dívidas</td>
-      </tr>
-    `;
-    return;
-  }
-
-  // só alunos com dívida > 0
-  rowsData = (data || []).filter(r => Number(r.total_debt || 0) > 0);
-
-  renderCards(rowsData);
-  renderTable(rowsData);
+function money(value) {
+  return new Intl.NumberFormat("pt-MZ", {
+    style: "currency",
+    currency: "MZN",
+    minimumFractionDigits: 2,
+  }).format(Number(value || 0));
 }
 
-function setupEvents() {
-  if (!searchEl) return;
-
-  searchEl.addEventListener("input", () => {
-    const term = searchEl.value.trim().toLowerCase();
-
-    const filtered = rowsData.filter(row =>
-      (row.full_name || "").toLowerCase().includes(term) ||
-      (row.course_name || "").toLowerCase().includes(term) ||
-      (row.class_name || "").toLowerCase().includes(term)
-    );
-
-    renderTable(filtered);
-  });
+function normalizeStatus(item) {
+  if (Number(item.debt || 0) <= 0) return "Sem dívida";
+  if (item.is_overdue) return "Atrasado";
+  return "Pendente";
 }
 
-function renderCards(rows) {
-  const totalDebt = sum(rows, "total_debt");
-  const totalPaid = sum(rows, "total_paid");
-  const debtors = rows.length;
-  const overdue = rows.filter(r => Number(r.overdue_count || 0) > 0).length;
+function renderStats(rows) {
+  if (!els.totalDebt || !els.totalPaid || !els.totalDebtors || !els.totalOverdue) return;
 
-  cardsEl.innerHTML = `
-    <div class="stat-card">
-      <span class="stat-label">💰 Dívida total</span>
-      <strong class="stat-value">${formatMoney(totalDebt)}</strong>
-    </div>
+  const totalDebt = rows.reduce((sum, row) => sum + Number(row.debt || 0), 0);
+  const totalPaid = rows.reduce((sum, row) => sum + Number(row.total_paid || 0), 0);
+  const totalDebtors = rows.filter((row) => Number(row.debt || 0) > 0).length;
+  const totalOverdue = rows.filter((row) => row.is_overdue && Number(row.debt || 0) > 0).length;
 
-    <div class="stat-card">
-      <span class="stat-label">✅ Total pago</span>
-      <strong class="stat-value">${formatMoney(totalPaid)}</strong>
-    </div>
-
-    <div class="stat-card">
-      <span class="stat-label">👥 Devedores</span>
-      <strong class="stat-value">${debtors}</strong>
-    </div>
-
-    <div class="stat-card stat-card-highlight">
-      <span class="stat-label">⚠️ Atrasados</span>
-      <strong class="stat-value">${overdue}</strong>
-    </div>
-  `;
+  els.totalDebt.textContent = money(totalDebt);
+  els.totalPaid.textContent = money(totalPaid);
+  els.totalDebtors.textContent = totalDebtors;
+  els.totalOverdue.textContent = totalOverdue;
 }
 
 function renderTable(rows) {
+  if (!els.tableBody) return;
+
   if (!rows.length) {
-    tableBodyEl.innerHTML = `
+    els.tableBody.innerHTML = `
       <tr>
-        <td colspan="8" class="empty-cell">Sem dívidas registadas</td>
+        <td colspan="7" class="empty-cell">Sem dívidas encontradas.</td>
       </tr>
     `;
     return;
   }
 
-  tableBodyEl.innerHTML = rows.map((row, index) => `
-    <tr class="${getRowClass(row, index)}">
-      <td>${escapeHtml(row.full_name || "-")}</td>
-      <td>${escapeHtml(row.course_name || "-")}</td>
-      <td>${escapeHtml(row.class_name || "-")}</td>
+  els.tableBody.innerHTML = rows
+    .map(
+      (row) => `
+        <tr>
+          <td>${row.student_name || "-"}</td>
+          <td>${row.course_name || "-"}</td>
+          <td>${row.class_name || "-"}</td>
+          <td>${money(row.total_charged)}</td>
+          <td>${money(row.total_paid)}</td>
+          <td>${money(row.debt)}</td>
+          <td>${normalizeStatus(row)}</td>
+        </tr>
+      `
+    )
+    .join("");
+}
 
-      <td>${formatMoney(row.total_charged)}</td>
-      <td>${formatMoney(row.total_paid)}</td>
+function applySearch(rows) {
+  const term = (els.search?.value || "").trim().toLowerCase();
+  if (!term) return rows;
 
-      <td class="text-danger strong">
-        ${formatMoney(row.total_debt)}
-      </td>
+  return rows.filter((row) => {
+    const student = (row.student_name || "").toLowerCase();
+    const course = (row.course_name || "").toLowerCase();
+    const turma = (row.class_name || "").toLowerCase();
+    return student.includes(term) || course.includes(term) || turma.includes(term);
+  });
+}
 
-      <td>${renderStatus(row)}</td>
+async function loadDividas() {
+  if (!els.tableBody) return;
 
-      <td>
-        <button class="btn btn-sm btn-primary" onclick="viewCharges('${row.student_id}')">
-          Ver
-        </button>
-
-        <button class="btn btn-sm btn-success" onclick="quickPay('${row.student_id}')">
-          Pagar
-        </button>
-      </td>
+  els.tableBody.innerHTML = `
+    <tr>
+      <td colspan="7" class="empty-cell">A carregar dívidas...</td>
     </tr>
-  `).join("");
-}
+  `;
 
-function getRowClass(row, index) {
-  // TOP 3 devedores
-  if (index === 0) return "row-top-1";
-  if (index === 1) return "row-top-2";
-  if (index === 2) return "row-top-3";
+  const { data, error } = await supabase
+    .from("student_debts_view")
+    .select("*")
+    .order("debt", { ascending: false });
 
-  // atraso
-  if (Number(row.overdue_count || 0) > 0) return "row-overdue";
-
-  return "";
-}
-
-function renderStatus(row) {
-  if (Number(row.total_debt || 0) <= 0) {
-    return `<span class="badge green">Sem dívida</span>`;
+  if (error) {
+    console.error("Erro ao carregar dívidas:", error);
+    els.tableBody.innerHTML = `
+      <tr>
+        <td colspan="7" class="empty-cell">Erro ao carregar dívidas.</td>
+      </tr>
+    `;
+    return;
   }
 
-  if (Number(row.overdue_count || 0) > 0) {
-    return `<span class="badge red">Atrasado</span>`;
+  const filtered = applySearch(data || []);
+  renderStats(filtered);
+  renderTable(filtered);
+}
+
+export async function initDividas() {
+  getEls();
+
+  if (!els.tableBody) {
+    console.error("Elemento #dividas-table-body não encontrado.");
+    return;
   }
 
-  return `<span class="badge yellow">Pendente</span>`;
+  if (els.search) {
+    els.search.addEventListener("input", () => {
+      loadDividas();
+    });
+  }
+
+  await loadDividas();
 }
-
-function sum(arr, field) {
-  return arr.reduce((a, b) => a + Number(b[field] || 0), 0);
-}
-
-function formatMoney(value) {
-  return Number(value || 0).toLocaleString("pt-MZ") + " MZN";
-}
-
-function escapeHtml(value) {
-  return String(value)
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
-}
-
-/* =========================
-   AÇÕES (integração sistema)
-========================= */
-
-window.viewCharges = function(studentId) {
-  localStorage.setItem("filter_student_id", studentId);
-  window.location.href = "cobrancas.html";
-};
-
-window.quickPay = function(studentId) {
-  localStorage.setItem("filter_student_id", studentId);
-  window.location.href = "cobrancas.html";
-};
