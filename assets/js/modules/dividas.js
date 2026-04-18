@@ -20,7 +20,8 @@ function money(value) {
 }
 
 function normalizeStatus(item) {
-  if (Number(item.debt || 0) <= 0) return "Sem dívida";
+  const debtValue = Number(item.debt || item.total_debt || 0);
+  if (debtValue <= 0) return "Sem dívida";
   if (item.is_overdue) return "Atrasado";
   return "Pendente";
 }
@@ -28,10 +29,10 @@ function normalizeStatus(item) {
 function renderStats(rows) {
   if (!els.totalDebt || !els.totalPaid || !els.totalDebtors || !els.totalOverdue) return;
 
-  const totalDebt = rows.reduce((sum, row) => sum + Number(row.debt || 0), 0);
-  const totalPaid = rows.reduce((sum, row) => sum + Number(row.total_paid || 0), 0);
-  const totalDebtors = rows.filter((row) => Number(row.debt || 0) > 0).length;
-  const totalOverdue = rows.filter((row) => row.is_overdue && Number(row.debt || 0) > 0).length;
+ const totalDebt = rows.reduce((sum, row) => sum + Number(row.debt || row.total_debt || 0), 0);
+const totalPaid = rows.reduce((sum, row) => sum + Number(row.total_paid || row.paid || 0), 0);
+const totalDebtors = rows.filter((row) => Number(row.debt || row.total_debt || 0) > 0).length;
+const totalOverdue = rows.filter((row) => row.is_overdue && Number(row.debt || row.total_debt || 0) > 0).length;
 
   els.totalDebt.textContent = money(totalDebt);
   els.totalPaid.textContent = money(totalPaid);
@@ -55,13 +56,13 @@ function renderTable(rows) {
     .map(
       (row) => `
         <tr>
-          <td>${row.student_name || "-"}</td>
-          <td>${row.course_name || "-"}</td>
-          <td>${row.class_name || "-"}</td>
-          <td>${money(row.total_charged)}</td>
-          <td>${money(row.total_paid)}</td>
-          <td>${money(row.debt)}</td>
-          <td>${normalizeStatus(row)}</td>
+        <td>${row.student_name || row.student || "-"}</td>
+<td>${row.course_name || row.course || "-"}</td>
+<td>${row.class_name || row.class || "-"}</td>
+<td>${money(row.total_charged || row.charged || 0)}</td>
+<td>${money(row.total_paid || row.paid || 0)}</td>
+<td>${money(row.debt || row.total_debt || 0)}</td>
+<td>${normalizeStatus(row)}</td>
         </tr>
       `
     )
@@ -89,10 +90,10 @@ async function loadDividas() {
     </tr>
   `;
 
-  const { data, error } = await supabase
-    .from("v_student_debts")
-    .select("*")
-    .order("debt", { ascending: false });
+const { data, error } = await supabase
+  .from("v_student_debts")
+  .select("*");
+  console.log("DIVIDAS DATA:", data);
 
   if (error) {
     console.error("Erro ao carregar dívidas:", error);
