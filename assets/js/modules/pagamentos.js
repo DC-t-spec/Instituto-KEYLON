@@ -213,10 +213,12 @@ function openReceipt(payment) {
           font-family: Arial, sans-serif;
           padding: 32px;
           color: #0f172a;
+          background: #f8fafc;
         }
         .receipt {
           max-width: 760px;
           margin: 0 auto;
+          background: #ffffff;
           border: 1px solid #cbd5e1;
           border-radius: 16px;
           overflow: hidden;
@@ -261,6 +263,9 @@ function openReceipt(payment) {
         }
         .actions {
           margin-top: 24px;
+          display: flex;
+          gap: 12px;
+          flex-wrap: wrap;
         }
         button {
           padding: 10px 16px;
@@ -273,12 +278,17 @@ function openReceipt(payment) {
           background: #0f172a;
           color: white;
         }
+        .pdf-btn {
+          background: #e2e8f0;
+          color: #0f172a;
+        }
         @media print {
           .actions {
             display: none;
           }
           body {
             padding: 0;
+            background: #ffffff;
           }
           .receipt {
             border: 0;
@@ -343,7 +353,8 @@ function openReceipt(payment) {
           </div>
 
           <div class="actions">
-            <button class="print-btn" onclick="window.print()">Imprimir / Guardar PDF</button>
+            <button class="print-btn" onclick="window.print()">Imprimir</button>
+            <button class="pdf-btn" onclick="window.print()">Guardar em PDF</button>
           </div>
         </div>
 
