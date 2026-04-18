@@ -10,94 +10,109 @@
   <link rel="stylesheet" href="./assets/css/layout.css" />
   <link rel="stylesheet" href="./assets/css/components.css" />
 </head>
+
 <body>
   <div class="app-shell">
-    <aside class="sidebar"> 
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
       <div class="sidebar-brand">
         <span class="brand-badge">KEYLON</span>
         <h2>Instituto</h2>
       </div>
 
-     <nav class="sidebar-nav">
-  <a class="nav-link active" href="./dashboard.html">Dashboard</a>
-  <a class="nav-link" href="./alunos.html">Alunos</a>
-  <a class="nav-link is-disabled" href="#">Cursos</a>
-  <a class="nav-link is-disabled" href="#">Turmas</a>
-  <a class="nav-link is-disabled" href="#">Cobranças</a>
- <a href="./pagamentos.html" class="nav-link">Pagamentos</a>
-  <a href="./dividas.html" class="nav-link">Dívidas</a>
-</nav>
+      <nav class="sidebar-nav">
+        <a href="./dashboard.html" class="nav-link active">Dashboard</a>
+        <a href="./alunos.html" class="nav-link">Alunos</a>
+        <a href="./cursos.html" class="nav-link">Cursos</a>
+        <a href="./turmas.html" class="nav-link">Turmas</a>
+        <a href="./cobrancas.html" class="nav-link">Cobranças</a>
+        <a href="./pagamentos.html" class="nav-link">Pagamentos</a>
+        <a href="./dividas.html" class="nav-link">Dívidas</a>
+      </nav>
 
       <button id="logout-btn" class="btn btn-ghost sidebar-logout">
         Terminar sessão
       </button>
     </aside>
 
+    <!-- MAIN -->
     <div class="app-main">
+
       <div id="mobile-backdrop" class="mobile-backdrop"></div>
+
+      <!-- TOPBAR -->
       <header class="topbar">
         <div>
           <h1>Dashboard</h1>
           <p class="page-subtitle">Visão geral administrativa e financeira</p>
         </div>
 
-    <div class="topbar-actions">
-  <button id="menu-toggle" class="menu-toggle" type="button">☰ Menu</button>
+        <div class="topbar-actions">
+          <button id="menu-toggle" class="menu-toggle" type="button">
+            ☰ Menu
+          </button>
 
-  <div class="topbar-user">
-    <span id="user-name">Utilizador</span>
-  </div>
-</div>
+          <div class="topbar-user">
+            <span id="user-name">Utilizador</span>
+          </div>
+        </div>
       </header>
 
+      <!-- CONTENT -->
       <main class="page-content">
+
+        <!-- STATS -->
         <section class="stats-grid">
-          <article class="stat-card">
+          <div class="stat-card">
             <span class="stat-label">Total de alunos</span>
             <strong id="total-students" class="stat-value">--</strong>
-          </article>
+          </div>
 
-          <article class="stat-card">
+          <div class="stat-card">
             <span class="stat-label">Alunos activos</span>
             <strong id="active-students" class="stat-value">--</strong>
-          </article>
+          </div>
 
-          <article class="stat-card">
+          <div class="stat-card">
             <span class="stat-label">Bolseiros</span>
             <strong id="scholarship-students" class="stat-value">--</strong>
-          </article>
+          </div>
 
-          <article class="stat-card">
+          <div class="stat-card">
             <span class="stat-label">Pagantes</span>
             <strong id="payer-students" class="stat-value">--</strong>
-          </article>
+          </div>
 
-          <article class="stat-card">
+          <div class="stat-card">
             <span class="stat-label">Turmas activas</span>
             <strong id="active-classes" class="stat-value">--</strong>
-          </article>
+          </div>
 
-          <article class="stat-card">
+          <div class="stat-card">
             <span class="stat-label">Cursos activos</span>
             <strong id="active-courses" class="stat-value">--</strong>
-          </article>
+          </div>
 
-          <article class="stat-card stat-card-highlight">
+          <div class="stat-card stat-card-highlight">
             <span class="stat-label">Dívida total</span>
             <strong id="total-debt" class="stat-value">--</strong>
-          </article>
+          </div>
 
-          <article class="stat-card stat-card-highlight">
+          <div class="stat-card stat-card-highlight">
             <span class="stat-label">Recebido este mês</span>
             <strong id="received-this-month" class="stat-value">--</strong>
-          </article>
+          </div>
         </section>
 
+        <!-- TABLES -->
         <section class="panel-grid">
+
           <article class="panel">
             <div class="panel-header">
               <h3>Alunos com maior dívida</h3>
             </div>
+
             <div class="table-wrap">
               <table class="data-table">
                 <thead>
@@ -108,6 +123,7 @@
                     <th>Dívida</th>
                   </tr>
                 </thead>
+
                 <tbody id="top-debtors-body">
                   <tr>
                     <td colspan="4" class="empty-cell">A carregar...</td>
@@ -121,6 +137,7 @@
             <div class="panel-header">
               <h3>Cobranças vencidas</h3>
             </div>
+
             <div class="table-wrap">
               <table class="data-table">
                 <thead>
@@ -131,6 +148,7 @@
                     <th>Saldo</th>
                   </tr>
                 </thead>
+
                 <tbody id="overdue-body">
                   <tr>
                     <td colspan="4" class="empty-cell">A carregar...</td>
@@ -139,11 +157,22 @@
               </table>
             </div>
           </article>
+
         </section>
+
       </main>
     </div>
   </div>
 
-  <script type="module" src="./assets/js/core/app.js"></script>
+  <!-- SCRIPTS -->
+  <script type="module">
+    import { initMobileSidebar } from "./assets/js/core/mobile-sidebar.js";
+    import "./assets/js/core/app.js";
+
+    document.addEventListener("DOMContentLoaded", () => {
+      initMobileSidebar();
+    });
+  </script>
+
 </body>
 </html>
