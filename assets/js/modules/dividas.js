@@ -114,10 +114,7 @@ function renderStatus(row) {
 }
 
 function formatMoney(value) {
-  return Number(value || 0).toLocaleString("pt-PT", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2
-  });
+  return Number(value || 0).toLocaleString("pt-MZ") + " MZN";
 }
 
 function escapeHtml(value) {
