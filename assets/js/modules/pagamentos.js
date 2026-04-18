@@ -148,7 +148,7 @@ function renderTable() {
   if (!paymentsState.payments.length) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="10" class="empty-cell">Nenhum pagamento encontrado.</td>
+        <td colspan="11" class="empty-cell">Nenhum pagamento encontrado.</td>
       </tr>
     `;
     return;
@@ -173,10 +173,37 @@ function renderTable() {
         <td>${item.payment_date || "-"}</td>
         <td>${getMethodLabel(methodValue)}</td>
         <td>${item.reference || "-"}</td>
+        <td>
+          <button
+            type="button"
+            class="btn btn-secondary btn-sm"
+            data-action="receipt"
+            data-id="${item.id}"
+          >
+            Recibo
+          </button>
+        </td>
       </tr>
     `;
   }).join("");
 }
+
+function handleTableClick(event) {
+  const button = event.target.closest("button[data-action]");
+  if (!button) return;
+
+  const action = button.dataset.action;
+  const id = button.dataset.id;
+  const payment = paymentsState.payments.find((item) => item.id === id);
+
+  if (!payment) return;
+
+  if (action === "receipt") {
+    console.log("Emitir recibo:", payment);
+    alert(`Recibo do pagamento ${payment.reference || payment.id}`);
+  }
+}
+
 
 function bindFilters() {
   const searchInput = el("paymentSearch");
@@ -206,4 +233,5 @@ export async function initPaymentsPage() {
   renderStats();
   renderTable();
   bindFilters();
+  el("paymentsTableBody")?.addEventListener("click", handleTableClick);
 }
