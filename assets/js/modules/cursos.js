@@ -2,6 +2,7 @@ import { supabase } from "../config/supabase.js";
 
 const state = {
   courses: [],
+  editingId: null,
 };
 
 function el(id) {
@@ -9,17 +10,26 @@ function el(id) {
 }
 
 function clearForm() {
-  const name = document.getElementById("course-name");
-  const code = document.getElementById("course-code");
-  const duration = document.getElementById("course-duration");
-  const price = document.getElementById("course-price");
-  const description = document.getElementById("course-description");
+  state.editingId = null;
+
+  const name = el("course-name");
+  const code = el("course-code");
+  const duration = el("course-duration");
+  const price = el("course-price");
+  const description = el("course-description");
 
   if (name) name.value = "";
   if (code) code.value = "";
   if (duration) duration.value = "";
   if (price) price.value = "";
   if (description) description.value = "";
+}
+
+function formatMoney(value) {
+  return new Intl.NumberFormat("pt-MZ", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(Number(value || 0));
 }
 
 async function fetchCourses() {
@@ -29,7 +39,9 @@ async function fetchCourses() {
     .order("created_at", { ascending: false });
 
   if (error) {
-    console.error("Erro ao carregar cursos:", error.message);
+    console.error("Erro ao carregar cursos:", error);
+    state.courses = [];
+    renderCourses();
     return;
   }
 
@@ -38,77 +50,110 @@ async function fetchCourses() {
 }
 
 function renderCourses() {
-  const tbody = el("cursos-body");
+  const tbody = el("coursesTableBody");
   if (!tbody) return;
 
   if (!state.courses.length) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="6">Nenhum curso encontrado.</td>
+        <td colspan="5" class="empty-cell">Nenhum curso encontrado.</td>
       </tr>
     `;
     return;
   }
 
-  tbody.innerHTML = state.courses.map((course) => `
-    <tr>
-      <td>${course.name || ""}</td>
-      <td>${course.code || ""}</td>
-      <td>${course.workload_hours ?? 0}</td>
-      <td>${course.duration_months ?? 0}</td>
-      <td>${course.status || ""}</td>
-      <td>
-        <button type="button" class="btn btn-secondary btn-sm" data-action="edit" data-id="${course.id}">Editar</button>
-        <button type="button" class="btn btn-danger btn-sm" data-action="delete" data-id="${course.id}">Eliminar</button>
-      </td>
-    </tr>
-  `).join("");
+  tbody.innerHTML = state.courses
+    .map((course) => {
+      return `
+        <tr>
+          <td>${course.name || "-"}</td>
+          <td>${course.code || "-"}</td>
+          <td>${course.duration_months ?? 0}</td>
+          <td>${formatMoney(course.monthly_fee ?? course.fee_enrollment ?? course.fee_registration ?? 0)}</td>
+          <td>
+            <button
+              type="button"
+              class="btn btn-secondary btn-sm"
+              data-action="edit"
+              data-id="${course.id}"
+            >
+              Editar
+            </button>
+            <button
+              type="button"
+              class="btn btn-danger btn-sm"
+              data-action="delete"
+              data-id="${course.id}"
+            >
+              Eliminar
+            </button>
+          </td>
+        </tr>
+      `;
+    })
+    .join("");
 }
 
 function fillForm(course) {
-  el("curso-id").value = course.id || "";
-  el("curso-name").value = course.name || "";
-  el("curso-code").value = course.code || "";
-  el("curso-hours").value = course.workload_hours ?? 0;
-  el("curso-months").value = course.duration_months ?? 0;
-  el("curso-status").value = course.status || "active";
+  state.editingId = course.id || null;
+
+  const name = el("course-name");
+  const code = el("course-code");
+  const duration = el("course-duration");
+  const price = el("course-price");
+  const description = el("course-description");
+
+  if (name) name.value = course.name || "";
+  if (code) code.value = course.code || "";
+  if (duration) duration.value = course.duration_months ?? "";
+  if (price) price.value =
+    course.monthly_fee ??
+    course.fee_enrollment ??
+    course.fee_registration ??
+    "";
+  if (description) description.value = course.description || "";
 }
 
 async function saveCourse(event) {
   event.preventDefault();
 
-  const id = el("curso-id").value.trim();
+  const name = el("course-name")?.value?.trim() || "";
+  const code = el("course-code")?.value?.trim() || "";
+  const duration = el("course-duration")?.value || "";
+  const price = el("course-price")?.value || "";
+  const description = el("course-description")?.value?.trim() || "";
 
-  const payload = {
-    name: el("curso-name").value.trim(),
-    code: el("curso-code").value.trim() || null,
-    workload_hours: Number(el("curso-hours").value || 0),
-    duration_months: Number(el("curso-months").value || 0),
-    status: el("curso-status").value,
-  };
-
-  if (!payload.name) {
+  if (!name) {
     alert("O nome do curso é obrigatório.");
     return;
   }
 
+  const payload = {
+    name,
+    code: code || null,
+    duration_months: duration ? Number(duration) : null,
+    description: description || null,
+    monthly_fee: price ? Number(price) : 0,
+  };
+
   let error = null;
 
-  if (id) {
-    ({ error } = await supabase.from("courses").update(payload).eq("id", id));
+  if (state.editingId) {
+    ({ error } = await supabase
+      .from("courses")
+      .update(payload)
+      .eq("id", state.editingId));
   } else {
     ({ error } = await supabase.from("courses").insert([payload]));
   }
 
   if (error) {
-    console.error("Erro ao guardar curso:", error.message);
+    console.error("Erro ao guardar curso:", error);
     alert(error.message || "Erro ao guardar curso.");
     return;
   }
 
- document.addEventListener("DOMContentLoaded", () => {
   clearForm();
-});
   await fetchCourses();
 }
 
@@ -116,11 +161,14 @@ async function deleteCourse(id) {
   const confirmed = window.confirm("Deseja eliminar este curso?");
   if (!confirmed) return;
 
-  const { error } = await supabase.from("courses").delete().eq("id", id);
+  const { error } = await supabase
+    .from("courses")
+    .delete()
+    .eq("id", id);
 
   if (error) {
-    console.error("Erro ao eliminar curso:", error.message);
-    alert("Não foi possível eliminar o curso.");
+    console.error("Erro ao eliminar curso:", error);
+    alert(error.message || "Não foi possível eliminar o curso.");
     return;
   }
 
@@ -128,10 +176,14 @@ async function deleteCourse(id) {
 }
 
 function bindEvents() {
-  el("curso-form")?.addEventListener("submit", saveCourse);
+  el("courseForm")?.addEventListener("submit", saveCourse);
 
-  el("cursos-body")?.addEventListener("click", async (event) => {
-    const button = event.target.closest("button");
+  el("course-reset-btn")?.addEventListener("click", () => {
+    clearForm();
+  });
+
+  el("coursesTableBody")?.addEventListener("click", async (event) => {
+    const button = event.target.closest("button[data-action]");
     if (!button) return;
 
     const action = button.dataset.action;
@@ -146,6 +198,60 @@ function bindEvents() {
     if (action === "delete" && id) {
       await deleteCourse(id);
     }
+  });
+
+  el("courseSearch")?.addEventListener("input", (event) => {
+    const term = (event.target.value || "").trim().toLowerCase();
+    const tbody = el("coursesTableBody");
+    if (!tbody) return;
+
+    const filtered = state.courses.filter((course) => {
+      return (
+        (course.name || "").toLowerCase().includes(term) ||
+        (course.code || "").toLowerCase().includes(term) ||
+        (course.description || "").toLowerCase().includes(term)
+      );
+    });
+
+    if (!filtered.length) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="5" class="empty-cell">Nenhum curso encontrado.</td>
+        </tr>
+      `;
+      return;
+    }
+
+    tbody.innerHTML = filtered
+      .map((course) => {
+        return `
+          <tr>
+            <td>${course.name || "-"}</td>
+            <td>${course.code || "-"}</td>
+            <td>${course.duration_months ?? 0}</td>
+            <td>${formatMoney(course.monthly_fee ?? course.fee_enrollment ?? course.fee_registration ?? 0)}</td>
+            <td>
+              <button
+                type="button"
+                class="btn btn-secondary btn-sm"
+                data-action="edit"
+                data-id="${course.id}"
+              >
+                Editar
+              </button>
+              <button
+                type="button"
+                class="btn btn-danger btn-sm"
+                data-action="delete"
+                data-id="${course.id}"
+              >
+                Eliminar
+              </button>
+            </td>
+          </tr>
+        `;
+      })
+      .join("");
   });
 }
 
