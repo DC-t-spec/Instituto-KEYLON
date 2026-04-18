@@ -3,113 +3,165 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Cursos | KEYLON</title>
+  <title>KEYLON | Cursos</title>
+
+  <link rel="stylesheet" href="./assets/css/tokens.css" />
   <link rel="stylesheet" href="./assets/css/base.css" />
-  <link rel="stylesheet" href="./assets/css/tokens.css" /> 
   <link rel="stylesheet" href="./assets/css/layout.css" />
   <link rel="stylesheet" href="./assets/css/components.css" />
 </head>
-<body> 
-  <div class="app-shell">
-    <aside class="sidebar">
-      <div class="sidebar-brand">KEYLON</div>
-      <h2>Instituto</h2>
 
-     <nav class="sidebar-nav">
-  <a href="./dashboard.html" class="nav-link">Dashboard</a>
-  <a href="./alunos.html" class="nav-link">Alunos</a>
-  <a href="./cursos.html" class="nav-link active">Cursos</a>
-  <a href="./turmas.html" class="nav-link">Turmas</a>
-  <a href="./cobrancas.html" class="nav-link">Cobranças</a>
- <a href="./pagamentos.html" class="nav-link">Pagamentos</a>
- <a href="./dividas.html" class="nav-link">Dívidas</a>
-</nav>
+<body>
+  <div class="app-shell">
+    
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <span class="brand-badge">KEYLON</span>
+        <h2>Instituto</h2>
+      </div>
+
+      <nav class="sidebar-nav">
+        <a href="./dashboard.html" class="nav-link">Dashboard</a>
+        <a href="./alunos.html" class="nav-link">Alunos</a>
+        <a href="./cursos.html" class="nav-link active">Cursos</a>
+        <a href="./turmas.html" class="nav-link">Turmas</a>
+        <a href="./cobrancas.html" class="nav-link">Cobranças</a>
+        <a href="./pagamentos.html" class="nav-link">Pagamentos</a>
+        <a href="./dividas.html" class="nav-link">Dívidas</a>
+      </nav>
+
+      <button id="logout-btn" class="btn btn-ghost sidebar-logout">
+        Terminar sessão
+      </button>
     </aside>
 
+    <!-- MAIN -->
     <div class="app-main">
-  <div id="mobile-backdrop" class="mobile-backdrop"></div>
+      
+      <div id="mobile-backdrop" class="mobile-backdrop"></div>
+
+      <!-- TOPBAR -->
       <header class="topbar">
         <div>
           <h1>Cursos</h1>
-          <p>Cadastro, edição e consulta de cursos</p>
+          <p class="page-subtitle">Gestão de cursos do instituto</p>
         </div>
-      <div class="topbar-actions">
-  <button id="menu-toggle" class="menu-toggle" type="button">☰ Menu</button>
 
-  <div class="topbar-user">
-    <span id="user-name">Utilizador</span>
-  </div>
-</div>
+        <div class="topbar-actions">
+          <button id="menu-toggle" class="menu-toggle" type="button">
+            ☰ Menu
+          </button>
+
+          <div class="topbar-user">
+            <span id="user-name">Utilizador</span>
+          </div>
+        </div>
       </header>
 
-      <section class="page-content">
-        <div class="card">
-          <div class="section-header">
-            <h3>Novo curso</h3>
-          </div>
+      <!-- CONTENT -->
+      <main class="page-content">
 
-          <form id="curso-form" class="form-grid">
-            <input type="hidden" id="curso-id" />
+        <!-- FORM + LIST -->
+        <section class="split-layout">
 
-            <div class="form-group">
-              <label for="curso-name">Nome do curso</label>
-              <input id="curso-name" class="input" type="text" required />
+          <!-- FORM -->
+          <article class="panel">
+            <div class="panel-header">
+              <h3>Novo curso</h3>
             </div>
 
-            <div class="form-group">
-              <label for="curso-code">Código</label>
-              <input id="curso-code" class="input" type="text" />
+            <div class="panel-body">
+              <form id="courseForm" class="form-grid">
+
+                <div class="form-group">
+                  <label for="course-name">Nome</label>
+                  <input id="course-name" name="name" type="text" required />
+                </div>
+
+                <div class="form-group">
+                  <label for="course-code">Código</label>
+                  <input id="course-code" name="code" type="text" />
+                </div>
+
+                <div class="form-group">
+                  <label for="course-duration">Duração (meses)</label>
+                  <input id="course-duration" name="duration_months" type="number" min="1" />
+                </div>
+
+                <div class="form-group">
+                  <label for="course-price">Preço base</label>
+                  <input id="course-price" name="price" type="number" step="0.01" />
+                </div>
+
+                <div class="form-group form-group-full">
+                  <label for="course-description">Descrição</label>
+                  <textarea id="course-description" name="description" rows="3"></textarea>
+                </div>
+
+                <div class="form-actions form-group-full">
+                  <button type="submit" class="btn btn-primary">Guardar</button>
+                  <button type="button" id="course-reset-btn" class="btn btn-secondary">Limpar</button>
+                </div>
+
+              </form>
+            </div>
+          </article>
+
+          <!-- LIST -->
+          <article class="panel">
+            <div class="panel-header panel-header-inline">
+              <h3>Lista de cursos</h3>
+
+              <div class="toolbar">
+                <input
+                  type="text"
+                  id="courseSearch"
+                  placeholder="Pesquisar curso..."
+                  class="search-input"
+                />
+              </div>
             </div>
 
-            <div class="form-group">
-              <label for="curso-hours">Carga horária</label>
-              <input id="curso-hours" class="input" type="number" min="0" value="0" />
+            <div class="table-wrap">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Nome</th>
+                    <th>Código</th>
+                    <th>Duração</th>
+                    <th>Preço</th>
+                    <th>Ações</th>
+                  </tr>
+                </thead>
+
+                <tbody id="coursesTableBody">
+                  <tr>
+                    <td colspan="5" class="empty-cell">
+                      A carregar cursos...
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
+          </article>
 
-            <div class="form-group">
-              <label for="curso-months">Duração em meses</label>
-              <input id="curso-months" class="input" type="number" min="0" value="0" />
-            </div>
+        </section>
 
-            <div class="form-group full-width">
-              <label for="curso-status">Status</label>
-              <select id="curso-status" class="input">
-                <option value="active">Active</option>
-                <option value="inactive">Inactive</option>
-              </select>
-            </div>
-
-            <div class="form-actions full-width">
-              <button type="submit" class="btn btn-primary">Guardar</button>
-            </div>
-          </form>
-        </div>
-
-        <div class="card">
-          <div class="section-header">
-            <h3>Lista de cursos</h3>
-          </div>
-
-          <div class="table-responsive">
-            <table class="table">
-              <thead>
-                <tr>
-                  <th>Nome</th>
-                  <th>Código</th>
-                  <th>Carga horária</th>
-                  <th>Duração</th>
-                  <th>Status</th>
-                  <th>Ações</th>
-                </tr>
-              </thead>
-              <tbody id="cursos-body"></tbody>
-            </table>
-          </div>
-        </div>
-      </section>
- </div>
+      </main>
+    </div>
   </div>
 
-  <script type="module" src="./assets/js/core/app.js"></script>
+  <!-- SCRIPTS -->
+  <script type="module">
+    import { initCoursesPage } from "./assets/js/modules/cursos.js";
+    import { initMobileSidebar } from "./assets/js/core/mobile-sidebar.js";
+
+    document.addEventListener("DOMContentLoaded", () => {
+      initMobileSidebar();
+      initCoursesPage();
+    });
+  </script>
+
 </body>
 </html>
