@@ -8,6 +8,18 @@ import { initChargesPage } from "../modules/cobrancas.js";
 import { initPaymentsPage } from "../modules/pagamentos.js";
 import { initDividas } from "../modules/dividas.js";
 
+// 🔥 MOBILE
+import { initMobileSidebar } from "./mobile-sidebar.js";
+
+// 🔥 PROTEÇÃO GLOBAL
+const safeInit = (fn) => {
+  try {
+    return fn();
+  } catch (e) {
+    console.error("Erro ao iniciar página:", e);
+  }
+};
+
 async function requireAuth() {
   const { data, error } = await supabase.auth.getSession();
 
@@ -44,6 +56,9 @@ async function initApp() {
   const session = await requireAuth();
   if (!session) return;
 
+  // 🔥 ATIVA MENU MOBILE
+  initMobileSidebar();
+
   const profile = await loadUserProfile(session.user.id);
 
   const userNameElement = document.getElementById("user-name");
@@ -62,20 +77,20 @@ async function initApp() {
 
   const path = window.location.pathname.toLowerCase();
 
-  // ROUTER SIMPLES
-  if (path.includes("dashboard.html")) return initDashboardPage();
+  // 🔥 ROUTER SEGURO
+  if (path.includes("dashboard.html")) return safeInit(initDashboardPage);
 
-  if (path.includes("alunos.html")) return initStudentsPage();
+  if (path.includes("alunos.html")) return safeInit(initStudentsPage);
 
-  if (path.includes("cursos.html")) return initCoursesPage();
+  if (path.includes("cursos.html")) return safeInit(initCoursesPage);
 
-  if (path.includes("turmas.html")) return initTurmasPage();
+  if (path.includes("turmas.html")) return safeInit(initTurmasPage);
 
-  if (path.includes("cobrancas.html")) return initChargesPage();
+  if (path.includes("cobrancas.html")) return safeInit(initChargesPage);
 
-  if (path.includes("pagamentos.html")) return initPaymentsPage();
+  if (path.includes("pagamentos.html")) return safeInit(initPaymentsPage);
 
-  if (path.includes("dividas.html")) return initDividas();
+  if (path.includes("dividas.html")) return safeInit(initDividas);
 }
 
 initApp();
