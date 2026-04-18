@@ -131,14 +131,14 @@ function renderStats() {
 
   const methodsUsed = new Set(
     rows
-      .map((item) => item.method)
+      .map((item) => item.method || item.payment_method)
       .filter(Boolean)
   ).size;
 
-  el("payments-count").textContent = rows.length;
-  el("payments-total").textContent = formatMoney(total);
-  el("payments-today").textContent = formatMoney(totalToday);
-  el("payments-methods").textContent = methodsUsed;
+  if (el("payments-count")) el("payments-count").textContent = rows.length;
+  if (el("payments-total")) el("payments-total").textContent = formatMoney(total);
+  if (el("payments-today")) el("payments-today").textContent = formatMoney(totalToday);
+  if (el("payments-methods")) el("payments-methods").textContent = methodsUsed;
 }
 
 function renderTable() {
@@ -188,6 +188,178 @@ function renderTable() {
   }).join("");
 }
 
+function openReceipt(payment) {
+  const charge = payment.student_charges || {};
+  const student = payment.students || {};
+  const className = student.classes?.name || "-";
+  const courseName = student.classes?.courses?.name || "-";
+  const methodValue = payment.method || payment.payment_method;
+
+  const receiptWindow = window.open("", "_blank", "width=900,height=700");
+
+  if (!receiptWindow) {
+    alert("Não foi possível abrir o recibo.");
+    return;
+  }
+
+  const html = `
+    <!DOCTYPE html>
+    <html lang="pt">
+    <head>
+      <meta charset="UTF-8" />
+      <title>Recibo</title>
+      <style>
+        body {
+          font-family: Arial, sans-serif;
+          padding: 32px;
+          color: #0f172a;
+        }
+        .receipt {
+          max-width: 760px;
+          margin: 0 auto;
+          border: 1px solid #cbd5e1;
+          border-radius: 16px;
+          overflow: hidden;
+        }
+        .header {
+          padding: 24px 28px;
+          background: #f8fafc;
+          border-bottom: 1px solid #e2e8f0;
+        }
+        .header h1 {
+          margin: 0 0 8px;
+          font-size: 28px;
+        }
+        .header p {
+          margin: 0;
+          color: #475569;
+        }
+        .content {
+          padding: 28px;
+        }
+        .grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 14px 24px;
+          margin-bottom: 24px;
+        }
+        .item strong {
+          display: block;
+          font-size: 12px;
+          text-transform: uppercase;
+          color: #64748b;
+          margin-bottom: 4px;
+        }
+        .amount {
+          font-size: 32px;
+          font-weight: 700;
+          margin: 20px 0;
+        }
+        .footer {
+          padding: 20px 28px 28px;
+          color: #475569;
+        }
+        .actions {
+          margin-top: 24px;
+        }
+        button {
+          padding: 10px 16px;
+          border: 0;
+          border-radius: 10px;
+          cursor: pointer;
+          font-weight: 600;
+        }
+        .print-btn {
+          background: #0f172a;
+          color: white;
+        }
+        @media print {
+          .actions {
+            display: none;
+          }
+          body {
+            padding: 0;
+          }
+          .receipt {
+            border: 0;
+          }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="receipt">
+        <div class="header">
+          <h1>Recibo de Pagamento</h1>
+          <p>KEYLON Instituto</p>
+        </div>
+
+        <div class="content">
+          <div class="grid">
+            <div class="item">
+              <strong>Aluno</strong>
+              <span>${student.full_name || "-"}</span>
+            </div>
+            <div class="item">
+              <strong>Número</strong>
+              <span>${student.student_number || "-"}</span>
+            </div>
+            <div class="item">
+              <strong>Curso</strong>
+              <span>${courseName}</span>
+            </div>
+            <div class="item">
+              <strong>Turma</strong>
+              <span>${className}</span>
+            </div>
+            <div class="item">
+              <strong>Cobrança</strong>
+              <span>${charge.title || "-"}</span>
+            </div>
+            <div class="item">
+              <strong>Tipo</strong>
+              <span>${getChargeTypeLabel(charge.charge_type)}</span>
+            </div>
+            <div class="item">
+              <strong>Data</strong>
+              <span>${payment.payment_date || "-"}</span>
+            </div>
+            <div class="item">
+              <strong>Método</strong>
+              <span>${getMethodLabel(methodValue)}</span>
+            </div>
+            <div class="item">
+              <strong>Referência</strong>
+              <span>${payment.reference || "-"}</span>
+            </div>
+          </div>
+
+          <div class="amount">
+            Valor pago: ${formatMoney(payment.amount)} MTn
+          </div>
+
+          <div class="item">
+            <strong>Observações</strong>
+            <span>${payment.notes || "-"}</span>
+          </div>
+
+          <div class="actions">
+            <button class="print-btn" onclick="window.print()">Imprimir / Guardar PDF</button>
+          </div>
+        </div>
+
+        <div class="footer">
+          Emitido automaticamente pelo sistema KEYLON.
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+
+  receiptWindow.document.open();
+  receiptWindow.document.write(html);
+  receiptWindow.document.close();
+}
+
 function handleTableClick(event) {
   const button = event.target.closest("button[data-action]");
   if (!button) return;
@@ -199,11 +371,9 @@ function handleTableClick(event) {
   if (!payment) return;
 
   if (action === "receipt") {
-    console.log("Emitir recibo:", payment);
-    alert(`Recibo do pagamento ${payment.reference || payment.id}`);
+    openReceipt(payment);
   }
 }
-
 
 function bindFilters() {
   const searchInput = el("paymentSearch");
