@@ -9,12 +9,17 @@ function el(id) {
 }
 
 function clearForm() {
-  el("curso-id").value = "";
-  el("curso-name").value = "";
-  el("curso-code").value = "";
-  el("curso-hours").value = "0";
-  el("curso-months").value = "0";
-  el("curso-status").value = "active";
+  const name = document.getElementById("course-name");
+  const code = document.getElementById("course-code");
+  const duration = document.getElementById("course-duration");
+  const price = document.getElementById("course-price");
+  const description = document.getElementById("course-description");
+
+  if (name) name.value = "";
+  if (code) code.value = "";
+  if (duration) duration.value = "";
+  if (price) price.value = "";
+  if (description) description.value = "";
 }
 
 async function fetchCourses() {
@@ -101,7 +106,9 @@ async function saveCourse(event) {
     return;
   }
 
+ document.addEventListener("DOMContentLoaded", () => {
   clearForm();
+});
   await fetchCourses();
 }
 
