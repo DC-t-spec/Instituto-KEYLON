@@ -262,3 +262,8 @@ export async function initClassesPage() {
   await fetchCourses();
   await fetchClasses();
 }
+export function initTurmasPage() {
+  console.log("Turmas page carregada");
+
+ 
+}
