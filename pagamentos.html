@@ -10,8 +10,11 @@
   <link rel="stylesheet" href="./assets/css/layout.css" />
   <link rel="stylesheet" href="./assets/css/components.css" />
 </head>
+
 <body>
   <div class="app-shell">
+
+    <!-- SIDEBAR -->
     <aside class="sidebar">
       <div class="sidebar-brand">
         <span class="brand-badge">KEYLON</span>
@@ -33,24 +36,33 @@
       </button>
     </aside>
 
+    <!-- MAIN -->
     <div class="app-main">
+
       <div id="mobile-backdrop" class="mobile-backdrop"></div>
+
+      <!-- TOPBAR -->
       <header class="topbar">
         <div>
           <h1>Pagamentos</h1>
           <p class="page-subtitle">Histórico de pagamentos registados</p>
         </div>
 
-      <div class="topbar-actions">
-  <button id="menu-toggle" class="menu-toggle" type="button">☰ Menu</button>
+        <div class="topbar-actions">
+          <button id="menu-toggle" class="menu-toggle" type="button">
+            ☰ Menu
+          </button>
 
-  <div class="topbar-user">
-    <span id="user-name">Utilizador</span>
-  </div>
-</div>
+          <div class="topbar-user">
+            <span id="user-name">Utilizador</span>
+          </div>
+        </div>
       </header>
 
+      <!-- CONTENT -->
       <main class="page-content">
+
+        <!-- STATS -->
         <section class="stats-grid">
           <div class="stat-card">
             <span class="stat-label">Total de pagamentos</span>
@@ -73,6 +85,7 @@
           </div>
         </section>
 
+        <!-- TABLE -->
         <article class="panel">
           <div class="panel-header panel-header-inline">
             <h3>Lista de pagamentos</h3>
@@ -109,28 +122,35 @@
                   <th>Data</th>
                   <th>Método</th>
                   <th>Referência</th>
+                  <th>Ações</th>
                 </tr>
               </thead>
+
               <tbody id="paymentsTableBody">
                 <tr>
-                  <td colspan="10" class="empty-cell">A carregar pagamentos...</td>
+                  <td colspan="11" class="empty-cell">
+                    A carregar pagamentos...
+                  </td>
                 </tr>
               </tbody>
             </table>
           </div>
         </article>
+
       </main>
     </div>
   </div>
 
+  <!-- SCRIPTS -->
   <script type="module">
     import { initPaymentsPage } from "./assets/js/modules/pagamentos.js";
-     import { initMobileSidebar } from "./assets/js/core/mobile-sidebar.js";
+    import { initMobileSidebar } from "./assets/js/core/mobile-sidebar.js";
 
     document.addEventListener("DOMContentLoaded", () => {
-        initMobileSidebar();
+      initMobileSidebar();
       initPaymentsPage();
     });
   </script>
+
 </body>
 </html>
