@@ -1,87 +1,130 @@
 import { supabase } from "../config/supabase.js";
 
-let data = [];
+const cardsEl = document.getElementById("cards");
+const tableBodyEl = document.getElementById("dividas-table-body");
+const searchEl = document.getElementById("search");
+
+let rowsData = [];
 
 export async function initDividas() {
-  await load();
-  setup();
+  await loadDividas();
+  setupEvents();
 }
 
-async function load() {
-  const { data: rows, error } = await supabase
+async function loadDividas() {
+  const { data, error } = await supabase
     .from("v_student_debt_summary")
     .select("*")
     .order("total_debt", { ascending: false });
 
   if (error) {
-    console.error(error);
+    console.error("Erro ao carregar dívidas:", error);
+    tableBodyEl.innerHTML = `
+      <tr>
+        <td colspan="7" class="empty-cell">Erro ao carregar dívidas</td>
+      </tr>
+    `;
     return;
   }
 
-  data = rows || [];
-  renderCards();
-  renderTable(data);
+  rowsData = (data || []).filter(row => Number(row.total_debt || 0) > 0);
+
+  renderCards(rowsData);
+  renderTable(rowsData);
 }
 
-function renderCards() {
-  const totalDebt = sum(data, "total_debt");
-  const totalPaid = sum(data, "total_paid");
-  const totalStudents = data.length;
-  const overdueStudents = data.filter(d => d.overdue_count > 0).length;
+function setupEvents() {
+  if (!searchEl) return;
 
-  document.getElementById("cards").innerHTML = `
-    <div class="stat-card">💰 Dívida Total<br><strong>${fmt(totalDebt)}</strong></div>
-    <div class="stat-card">✅ Pago<br><strong>${fmt(totalPaid)}</strong></div>
-    <div class="stat-card">👥 Devedores<br><strong>${totalStudents}</strong></div>
-    <div class="stat-card">⚠️ Atrasados<br><strong>${overdueStudents}</strong></div>
+  searchEl.addEventListener("input", () => {
+    const term = searchEl.value.trim().toLowerCase();
+
+    const filtered = rowsData.filter(row =>
+      (row.full_name || "").toLowerCase().includes(term) ||
+      (row.course_name || "").toLowerCase().includes(term) ||
+      (row.class_name || "").toLowerCase().includes(term)
+    );
+
+    renderTable(filtered);
+  });
+}
+
+function renderCards(rows) {
+  const totalDebt = rows.reduce((sum, row) => sum + Number(row.total_debt || 0), 0);
+  const totalPaid = rows.reduce((sum, row) => sum + Number(row.total_paid || 0), 0);
+  const debtors = rows.length;
+  const overdue = rows.filter(row => Number(row.overdue_count || 0) > 0).length;
+
+  cardsEl.innerHTML = `
+    <div class="stat-card">
+      <span class="stat-label">Dívida total</span>
+      <strong class="stat-value">${formatMoney(totalDebt)}</strong>
+    </div>
+
+    <div class="stat-card">
+      <span class="stat-label">Total pago</span>
+      <strong class="stat-value">${formatMoney(totalPaid)}</strong>
+    </div>
+
+    <div class="stat-card">
+      <span class="stat-label">Devedores</span>
+      <strong class="stat-value">${debtors}</strong>
+    </div>
+
+    <div class="stat-card stat-card-highlight">
+      <span class="stat-label">Atrasados</span>
+      <strong class="stat-value">${overdue}</strong>
+    </div>
   `;
 }
 
 function renderTable(rows) {
-  const tbody = document.getElementById("dividas-table-body");
-
   if (!rows.length) {
-    tbody.innerHTML = `<tr><td colspan="7" class="empty-cell">Sem dados</td></tr>`;
+    tableBodyEl.innerHTML = `
+      <tr>
+        <td colspan="7" class="empty-cell">Sem dívidas registadas</td>
+      </tr>
+    `;
     return;
   }
 
-  tbody.innerHTML = rows.map(r => `
+  tableBodyEl.innerHTML = rows.map(row => `
     <tr>
-      <td>${r.full_name}</td>
-      <td>${r.course_name || "-"}</td>
-      <td>${r.class_name || "-"}</td>
-      <td>${fmt(r.total_charged)}</td>
-      <td>${fmt(r.total_paid)}</td>
-      <td class="text-danger">${fmt(r.total_debt)}</td>
-      <td>${badge(r)}</td>
+      <td>${escapeHtml(row.full_name || "-")}</td>
+      <td>${escapeHtml(row.course_name || "-")}</td>
+      <td>${escapeHtml(row.class_name || "-")}</td>
+      <td>${formatMoney(row.total_charged)}</td>
+      <td>${formatMoney(row.total_paid)}</td>
+      <td>${formatMoney(row.total_debt)}</td>
+      <td>${renderStatus(row)}</td>
     </tr>
   `).join("");
 }
 
-function setup() {
-  document.getElementById("search")?.addEventListener("input", filter);
+function renderStatus(row) {
+  if (Number(row.total_debt || 0) <= 0) {
+    return `<span class="badge badge-success">Sem dívida</span>`;
+  }
+
+  if (Number(row.overdue_count || 0) > 0) {
+    return `<span class="badge badge-danger">Atrasado</span>`;
+  }
+
+  return `<span class="badge badge-warning">Pendente</span>`;
 }
 
-function filter(e) {
-  const q = e.target.value.toLowerCase();
-
-  const filtered = data.filter(d =>
-    d.full_name.toLowerCase().includes(q)
-  );
-
-  renderTable(filtered);
+function formatMoney(value) {
+  return Number(value || 0).toLocaleString("pt-PT", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  });
 }
 
-function sum(arr, field) {
-  return arr.reduce((a, b) => a + Number(b[field] || 0), 0);
-}
-
-function fmt(v) {
-  return Number(v || 0).toLocaleString("pt-MZ") + " MZN";
-}
-
-function badge(r) {
-  if (r.total_debt === 0) return `<span class="badge green">Sem dívida</span>`;
-  if (r.overdue_count > 0) return `<span class="badge red">Atrasado</span>`;
-  return `<span class="badge yellow">Pendente</span>`;
+function escapeHtml(value) {
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
 }
