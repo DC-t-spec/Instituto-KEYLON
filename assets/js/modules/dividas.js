@@ -19,20 +19,22 @@ function money(value) {
   }).format(Number(value || 0));
 }
 
-function normalizeStatus(item) {
-  const debtValue = Number(item.debt || item.total_debt || 0);
-  if (debtValue <= 0) return "Sem dívida";
-  if (item.is_overdue) return "Atrasado";
+function normalizeStatus(row) {
+  const debt = Number(row.total_debt || 0);
+  const overdueCount = Number(row.overdue_count || 0);
+
+  if (debt <= 0) return "Sem dívida";
+  if (overdueCount > 0) return "Atrasado";
   return "Pendente";
 }
 
 function renderStats(rows) {
   if (!els.totalDebt || !els.totalPaid || !els.totalDebtors || !els.totalOverdue) return;
 
- const totalDebt = rows.reduce((sum, row) => sum + Number(row.debt || row.total_debt || 0), 0);
-const totalPaid = rows.reduce((sum, row) => sum + Number(row.total_paid || row.paid || 0), 0);
-const totalDebtors = rows.filter((row) => Number(row.debt || row.total_debt || 0) > 0).length;
-const totalOverdue = rows.filter((row) => row.is_overdue && Number(row.debt || row.total_debt || 0) > 0).length;
+  const totalDebt = rows.reduce((sum, row) => sum + Number(row.total_debt || 0), 0);
+  const totalPaid = rows.reduce((sum, row) => sum + Number(row.total_paid || 0), 0);
+  const totalDebtors = rows.filter((row) => Number(row.total_debt || 0) > 0).length;
+  const totalOverdue = rows.filter((row) => Number(row.overdue_count || 0) > 0).length;
 
   els.totalDebt.textContent = money(totalDebt);
   els.totalPaid.textContent = money(totalPaid);
@@ -56,13 +58,13 @@ function renderTable(rows) {
     .map(
       (row) => `
         <tr>
-        <td>${row.student_name || row.student || "-"}</td>
-<td>${row.course_name || row.course || "-"}</td>
-<td>${row.class_name || row.class || "-"}</td>
-<td>${money(row.total_charged || row.charged || 0)}</td>
-<td>${money(row.total_paid || row.paid || 0)}</td>
-<td>${money(row.debt || row.total_debt || 0)}</td>
-<td>${normalizeStatus(row)}</td>
+          <td>${row.full_name || "-"}</td>
+          <td>${row.course_name || "-"}</td>
+          <td>${row.class_name || "-"}</td>
+          <td>${money(row.total_charged)}</td>
+          <td>${money(row.total_paid)}</td>
+          <td>${money(row.total_debt)}</td>
+          <td>${normalizeStatus(row)}</td>
         </tr>
       `
     )
@@ -74,7 +76,7 @@ function applySearch(rows) {
   if (!term) return rows;
 
   return rows.filter((row) => {
-    const student = (row.student_name || "").toLowerCase();
+    const student = (row.full_name || "").toLowerCase();
     const course = (row.course_name || "").toLowerCase();
     const turma = (row.class_name || "").toLowerCase();
     return student.includes(term) || course.includes(term) || turma.includes(term);
@@ -90,10 +92,10 @@ async function loadDividas() {
     </tr>
   `;
 
-const { data, error } = await supabase
-  .from("v_student_debts")
-  .select("*");
-  console.log("DIVIDAS DATA:", data);
+  const { data, error } = await supabase
+    .from("v_student_debt_summary")
+    .select("*")
+    .order("total_debt", { ascending: false });
 
   if (error) {
     console.error("Erro ao carregar dívidas:", error);
@@ -119,9 +121,7 @@ export async function initDividas() {
   }
 
   if (els.search) {
-    els.search.addEventListener("input", () => {
-      loadDividas();
-    });
+    els.search.addEventListener("input", loadDividas);
   }
 
   await loadDividas();
