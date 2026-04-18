@@ -3,14 +3,18 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Turmas | KEYLON</title>
-  <link rel="stylesheet" href="./assets/css/base.css" />
+  <title>KEYLON | Turmas</title>
+
   <link rel="stylesheet" href="./assets/css/tokens.css" />
+  <link rel="stylesheet" href="./assets/css/base.css" />
   <link rel="stylesheet" href="./assets/css/layout.css" />
   <link rel="stylesheet" href="./assets/css/components.css" />
 </head>
+
 <body>
   <div class="app-shell">
+
+    <!-- SIDEBAR -->
     <aside class="sidebar">
       <div class="sidebar-brand">
         <span class="brand-badge">KEYLON</span>
@@ -24,12 +28,20 @@
         <a href="./turmas.html" class="nav-link active">Turmas</a>
         <a href="./cobrancas.html" class="nav-link">Cobranças</a>
         <a href="./pagamentos.html" class="nav-link">Pagamentos</a>
-       <a href="./dividas.html" class="nav-link">Dívidas</a>
+        <a href="./dividas.html" class="nav-link">Dívidas</a>
       </nav>
+
+      <button id="logout-btn" class="btn btn-ghost sidebar-logout">
+        Terminar sessão
+      </button>
     </aside>
 
-    <main class="app-main">
+    <!-- MAIN -->
+    <div class="app-main">
+
       <div id="mobile-backdrop" class="mobile-backdrop"></div>
+
+      <!-- TOPBAR -->
       <header class="topbar">
         <div>
           <h1>Turmas</h1>
@@ -37,76 +49,91 @@
         </div>
 
         <div class="topbar-actions">
-  <button id="menu-toggle" class="menu-toggle" type="button">☰ Menu</button>
+          <button id="menu-toggle" class="menu-toggle" type="button">
+            ☰ Menu
+          </button>
 
-  <div class="topbar-user">
-    <span id="user-name">Utilizador</span>
-  </div>
-</div>
+          <div class="topbar-user">
+            <span id="user-name">Utilizador</span>
+          </div>
+        </div>
       </header>
 
-      <section class="page-content">
-        <div class="panel">
+      <!-- CONTENT -->
+      <main class="page-content">
+
+        <article class="panel">
+
+          <!-- HEADER -->
           <div class="panel-header panel-header-inline">
-            <input
-              type="text"
-              id="search-turmas"
-              class="input search-input"
-              placeholder="Pesquisar turmas..."
-            />
-            <button id="btn-nova-turma" class="btn btn-primary">Nova turma</button>
+            <h3>Lista de turmas</h3>
+
+            <div class="toolbar">
+              <input
+                type="text"
+                id="search-turmas"
+                class="search-input"
+                placeholder="Pesquisar turmas..."
+              />
+
+              <button id="btn-nova-turma" class="btn btn-primary">
+                Nova turma
+              </button>
+            </div>
           </div>
 
+          <!-- FORM -->
           <div id="turma-form-container" class="panel-body hidden">
             <form id="turma-form" class="form-grid">
+
               <input type="hidden" id="turma-id" />
 
               <div class="form-group">
                 <label for="turma-curso-id">Curso</label>
-                <select id="turma-curso-id" class="input" required></select>
+                <select id="turma-curso-id" required></select>
               </div>
 
               <div class="form-group">
                 <label for="turma-nome">Nome da turma</label>
-                <input id="turma-nome" class="input" type="text" required />
+                <input id="turma-nome" type="text" required />
               </div>
 
               <div class="form-group">
                 <label for="turma-codigo">Código</label>
-                <input id="turma-codigo" class="input" type="text" />
+                <input id="turma-codigo" type="text" />
               </div>
 
               <div class="form-group">
                 <label for="turma-periodo">Período</label>
-                <input id="turma-periodo" class="input" type="text" placeholder="Manhã / Tarde / Noite" />
+                <input id="turma-periodo" type="text" placeholder="Manhã / Tarde / Noite" />
               </div>
 
               <div class="form-group">
                 <label for="turma-ano">Ano</label>
-                <input id="turma-ano" class="input" type="number" />
+                <input id="turma-ano" type="number" />
               </div>
 
               <div class="form-group">
                 <label for="turma-capacidade">Capacidade</label>
-                <input id="turma-capacidade" class="input" type="number" min="0" value="0" />
+                <input id="turma-capacidade" type="number" min="0" value="0" />
               </div>
 
               <div class="form-group">
                 <label for="turma-data-inicio">Data de início</label>
-                <input id="turma-data-inicio" class="input" type="date" />
+                <input id="turma-data-inicio" type="date" />
               </div>
 
               <div class="form-group">
                 <label for="turma-data-fim">Data de fim</label>
-                <input id="turma-data-fim" class="input" type="date" />
+                <input id="turma-data-fim" type="date" />
               </div>
 
               <div class="form-group form-group-full">
                 <label for="turma-status">Status</label>
-                <select id="turma-status" class="input">
-                  <option value="active">Active</option>
-                  <option value="closed">Closed</option>
-                  <option value="cancelled">Cancelled</option>
+                <select id="turma-status">
+                  <option value="active">Activo</option>
+                  <option value="closed">Fechado</option>
+                  <option value="cancelled">Cancelado</option>
                 </select>
               </div>
 
@@ -114,9 +141,11 @@
                 <button type="submit" class="btn btn-primary">Guardar</button>
                 <button type="button" id="btn-cancelar-turma" class="btn btn-secondary">Cancelar</button>
               </div>
+
             </form>
           </div>
 
+          <!-- TABLE -->
           <div class="table-wrap">
             <table class="data-table">
               <thead>
@@ -130,14 +159,33 @@
                   <th>Ações</th>
                 </tr>
               </thead>
-              <tbody id="turmas-table-body"></tbody>
+
+              <tbody id="turmas-table-body">
+                <tr>
+                  <td colspan="7" class="empty-cell">
+                    A carregar turmas...
+                  </td>
+                </tr>
+              </tbody>
             </table>
           </div>
-        </div>
-      </section>
-    </main>
+
+        </article>
+
+      </main>
+    </div>
   </div>
 
-  <script type="module" src="./assets/js/core/app.js"></script>
+  <!-- SCRIPTS -->
+  <script type="module">
+    import { initMobileSidebar } from "./assets/js/core/mobile-sidebar.js";
+    import { initTurmasPage } from "./assets/js/modules/turmas.js";
+
+    document.addEventListener("DOMContentLoaded", () => {
+      initMobileSidebar();
+      initTurmasPage();
+    });
+  </script>
+
 </body>
 </html>
