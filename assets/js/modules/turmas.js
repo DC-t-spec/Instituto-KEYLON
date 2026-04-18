@@ -40,6 +40,13 @@ function clearForm() {
   if (els.status) els.status.value = "active";
 }
 
+function formatStatus(status) {
+  if (status === "active") return "Activo";
+  if (status === "closed") return "Fechado";
+  if (status === "cancelled") return "Cancelado";
+  return status || "-";
+}
+
 function renderTurmas(rows) {
   if (!els.tableBody) return;
 
@@ -57,7 +64,7 @@ function renderTurmas(rows) {
       (row) => `
         <tr>
           <td>${row.name || "-"}</td>
-        <td>${row.courses?.name || "-"}</td>
+          <td>${row.courses?.name || "-"}</td>
           <td>${row.period || "-"}</td>
           <td>${row.year || "-"}</td>
           <td>${row.capacity ?? 0}</td>
@@ -69,13 +76,6 @@ function renderTurmas(rows) {
       `
     )
     .join("");
-}
-
-function formatStatus(status) {
-  if (status === "active") return "Activo";
-  if (status === "closed") return "Fechado";
-  if (status === "cancelled") return "Cancelado";
-  return status || "-";
 }
 
 async function loadCoursesOptions() {
@@ -108,25 +108,25 @@ async function loadTurmas() {
     </tr>
   `;
 
- const { data, error } = await supabase
-  .from("classes")
-  .select(`
-    id,
-    name,
-    code,
-    period,
-    year,
-    capacity,
-    start_date,
-    end_date,
-    status,
-    created_at,
-    course_id,
-    courses (
-      name
-    )
-  `)
-  .order("created_at", { ascending: false });
+  const { data, error } = await supabase
+    .from("classes")
+    .select(`
+      id,
+      course_id,
+      name,
+      code,
+      period,
+      year,
+      capacity,
+      start_date,
+      end_date,
+      status,
+      created_at,
+      courses (
+        name
+      )
+    `)
+    .order("created_at", { ascending: false });
 
   if (error) {
     console.error("Erro ao carregar turmas:", error);
@@ -140,18 +140,18 @@ async function loadTurmas() {
 
   const term = (els.search?.value || "").trim().toLowerCase();
 
- const filtered = (data || []).filter((row) => {
-  const courseName = row.courses?.name || "";
+  const filtered = (data || []).filter((row) => {
+    const courseName = row.courses?.name || "";
 
-  if (!term) return true;
+    if (!term) return true;
 
-  return (
-    (row.name || "").toLowerCase().includes(term) ||
-    courseName.toLowerCase().includes(term) ||
-    (row.period || "").toLowerCase().includes(term) ||
-    String(row.year || "").toLowerCase().includes(term)
-  );
-});
+    return (
+      (row.name || "").toLowerCase().includes(term) ||
+      courseName.toLowerCase().includes(term) ||
+      (row.period || "").toLowerCase().includes(term) ||
+      String(row.year || "").toLowerCase().includes(term)
+    );
+  });
 
   renderTurmas(filtered);
 }
@@ -177,7 +177,6 @@ async function handleSubmit(event) {
   }
 
   const editingId = els.id?.value;
-
   let error;
 
   if (editingId) {
