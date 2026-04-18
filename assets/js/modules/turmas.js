@@ -57,7 +57,7 @@ function renderTurmas(rows) {
       (row) => `
         <tr>
           <td>${row.name || "-"}</td>
-          <td>${row.course_name || "-"}</td>
+        <td>${row.courses?.name || "-"}</td>
           <td>${row.period || "-"}</td>
           <td>${row.year || "-"}</td>
           <td>${row.capacity ?? 0}</td>
@@ -108,10 +108,25 @@ async function loadTurmas() {
     </tr>
   `;
 
-  const { data, error } = await supabase
-    .from("classes_with_course_view")
-    .select("*")
-    .order("created_at", { ascending: false });
+ const { data, error } = await supabase
+  .from("classes")
+  .select(`
+    id,
+    name,
+    code,
+    period,
+    year,
+    capacity,
+    start_date,
+    end_date,
+    status,
+    created_at,
+    course_id,
+    courses (
+      name
+    )
+  `)
+  .order("created_at", { ascending: false });
 
   if (error) {
     console.error("Erro ao carregar turmas:", error);
@@ -125,16 +140,18 @@ async function loadTurmas() {
 
   const term = (els.search?.value || "").trim().toLowerCase();
 
-  const filtered = (data || []).filter((row) => {
-    if (!term) return true;
+ const filtered = (data || []).filter((row) => {
+  const courseName = row.courses?.name || "";
 
-    return (
-      (row.name || "").toLowerCase().includes(term) ||
-      (row.course_name || "").toLowerCase().includes(term) ||
-      (row.period || "").toLowerCase().includes(term) ||
-      String(row.year || "").toLowerCase().includes(term)
-    );
-  });
+  if (!term) return true;
+
+  return (
+    (row.name || "").toLowerCase().includes(term) ||
+    courseName.toLowerCase().includes(term) ||
+    (row.period || "").toLowerCase().includes(term) ||
+    String(row.year || "").toLowerCase().includes(term)
+  );
+});
 
   renderTurmas(filtered);
 }
