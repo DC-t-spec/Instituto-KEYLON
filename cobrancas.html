@@ -380,8 +380,10 @@
 
   <script type="module">
     import { initChargesPage } from "./assets/js/modules/cobrancas.js";
+    import { initMobileSidebar } from "./assets/js/core/mobile-sidebar.js";
 
     document.addEventListener("DOMContentLoaded", () => {
+       initMobileSidebar();
       initChargesPage();
     });
   </script>
