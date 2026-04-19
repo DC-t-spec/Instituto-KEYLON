@@ -8,7 +8,7 @@ import { initTurmasPage } from "../modules/turmas.js";
 import { initChargesPage } from "../modules/cobrancas.js";
 import { initPaymentsPage } from "../modules/pagamentos.js";
 import { initDividas } from "../modules/dividas.js";
-import { initInventario } from "../modules/inventario.js";
+import { initInventarioPage } from "../modules/inventario.js";
 
 // 🔥 MOBILE
 import { initMobileSidebar } from "./mobile-sidebar.js";
@@ -96,7 +96,7 @@ async function initApp() {
 
   if (path.includes("dividas.html")) return safeInit(initDividas);
 
-  if (path.includes("inventario.html")) return initInventario();
+  if (path.includes("inventario.html")) return safeInit(initInventarioPage);
 }
 
 initApp();
