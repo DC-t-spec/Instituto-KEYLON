@@ -2,91 +2,196 @@
 <html lang="pt">
 <head>
   <meta charset="UTF-8" />
-  <title>Inventário</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>KEYLON | Inventário</title>
 
+  <link rel="stylesheet" href="./assets/css/tokens.css" />
   <link rel="stylesheet" href="./assets/css/base.css" />
   <link rel="stylesheet" href="./assets/css/layout.css" />
   <link rel="stylesheet" href="./assets/css/components.css" />
 </head>
 
 <body>
-<div class="app-shell">
+  <div class="app-shell">
 
-<aside class="sidebar">
-  <nav class="sidebar-nav">
-    <a href="./dashboard.html">Dashboard</a>
-    <a href="./despesas.html">Despesas</a>
-    <a href="./inventario.html" class="active">Inventário</a>
-  </nav>
-</aside>
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <span class="brand-badge">KEYLON</span>
+        <h2>Instituto</h2>
+      </div>
 
-<div class="app-main">
+      <nav class="sidebar-nav">
+        <a href="./dashboard.html" class="nav-link">Dashboard</a>
+        <a href="./alunos.html" class="nav-link">Alunos</a>
+        <a href="./cursos.html" class="nav-link">Cursos</a>
+        <a href="./turmas.html" class="nav-link">Turmas</a>
+        <a href="./cobrancas.html" class="nav-link">Cobranças</a>
+        <a href="./pagamentos.html" class="nav-link">Pagamentos</a>
+        <a href="./dividas.html" class="nav-link">Dívidas</a>
+        <a href="./despesas.html" class="nav-link">Despesas</a>
+        <a href="./inventario.html" class="nav-link active">Inventário</a>
+      </nav>
 
-<header class="topbar">
-  <h1>Inventário</h1>
-</header>
+      <button id="logout-btn" class="btn btn-ghost sidebar-logout">
+        Terminar sessão
+      </button>
+    </aside>
 
-<main class="page-content">
+    <div class="app-main">
+      <div id="mobile-backdrop" class="mobile-backdrop"></div>
 
-<section class="split-layout">
+      <header class="topbar">
+        <div>
+          <h1>Inventário</h1>
+          <p class="page-subtitle">Controlo de materiais e stock</p>
+        </div>
 
-<!-- ITEM -->
-<article class="panel">
-<h3>Novo item</h3>
+        <div class="topbar-actions">
+          <button id="menu-toggle" class="menu-toggle" type="button">☰ Menu</button>
+          <div class="topbar-user">
+            <span id="user-name">Utilizador</span>
+          </div>
+        </div>
+      </header>
 
-<form id="item-form">
-<input id="item-name" placeholder="Nome (Marcador, Papel...)" required />
-<input id="item-unit" placeholder="Unidade" />
-<textarea id="item-desc" placeholder="Descrição"></textarea>
+      <main class="page-content">
 
-<button type="submit">Guardar</button>
-</form>
-</article>
+        <section class="stats-grid">
+          <div class="stat-card">
+            <span class="stat-label">Total de itens</span>
+            <strong class="stat-value" id="inventory-items-count">0</strong>
+          </div>
 
-<!-- MOVIMENTO -->
-<article class="panel">
-<h3>Movimento</h3>
+          <div class="stat-card">
+            <span class="stat-label">Com stock</span>
+            <strong class="stat-value" id="inventory-positive-count">0</strong>
+          </div>
 
-<form id="move-form">
+          <div class="stat-card">
+            <span class="stat-label">Sem stock</span>
+            <strong class="stat-value" id="inventory-zero-count">0</strong>
+          </div>
 
-<select id="move-item"></select>
+          <div class="stat-card stat-card-highlight">
+            <span class="stat-label">Movimentos</span>
+            <strong class="stat-value" id="inventory-movements-count">0</strong>
+          </div>
+        </section>
 
-<select id="move-type">
-<option value="in">Entrada</option>
-<option value="out">Saída</option>
-</select>
+        <section class="split-layout">
+          <article class="panel">
+            <div class="panel-header">
+              <h3>Novo item</h3>
+            </div>
 
-<input id="move-qty" type="number" placeholder="Quantidade" required />
+            <div class="panel-body">
+              <form id="inventory-item-form" class="form-grid">
+                <div class="form-group">
+                  <label for="inventory-item-name">Nome</label>
+                  <input id="inventory-item-name" type="text" required />
+                </div>
 
-<input id="move-reason" placeholder="Motivo" />
+                <div class="form-group">
+                  <label for="inventory-item-unit">Unidade</label>
+                  <input id="inventory-item-unit" type="text" value="unidade" />
+                </div>
 
-<button type="submit">Guardar</button>
-</form>
-</article>
+                <div class="form-group form-group-full">
+                  <label for="inventory-item-description">Descrição</label>
+                  <textarea id="inventory-item-description" rows="3"></textarea>
+                </div>
 
-</section>
+                <div class="form-actions form-group-full">
+                  <button type="submit" class="btn btn-primary">Guardar item</button>
+                  <button type="button" id="inventory-item-reset-btn" class="btn btn-secondary">Limpar</button>
+                </div>
+              </form>
+            </div>
+          </article>
 
-<!-- TABELA -->
-<article class="panel">
-<h3>Stock atual</h3>
+          <article class="panel">
+            <div class="panel-header">
+              <h3>Novo movimento</h3>
+            </div>
 
-<table>
-<thead>
-<tr>
-<th>Item</th>
-<th>Stock</th>
-</tr>
-</thead>
+            <div class="panel-body">
+              <form id="inventory-move-form" class="form-grid">
+                <div class="form-group form-group-full">
+                  <label for="inventory-move-item">Item</label>
+                  <select id="inventory-move-item" required>
+                    <option value="">Selecionar item</option>
+                  </select>
+                </div>
 
-<tbody id="stock-body"></tbody>
-</table>
+                <div class="form-group">
+                  <label for="inventory-move-type">Tipo</label>
+                  <select id="inventory-move-type" required>
+                    <option value="in">Entrada</option>
+                    <option value="out">Saída</option>
+                  </select>
+                </div>
 
-</article>
+                <div class="form-group">
+                  <label for="inventory-move-qty">Quantidade</label>
+                  <input id="inventory-move-qty" type="number" min="0.01" step="0.01" required />
+                </div>
 
-</main>
-</div>
-</div>
+                <div class="form-group">
+                  <label for="inventory-move-reason">Motivo</label>
+                  <input id="inventory-move-reason" type="text" placeholder="Compra, uso em aula..." />
+                </div>
 
-<script type="module" src="./assets/js/modules/inventario.js"></script>
+                <div class="form-group form-group-full">
+                  <label for="inventory-move-reference">Referência</label>
+                  <input id="inventory-move-reference" type="text" placeholder="Despesa, consumo, ajuste..." />
+                </div>
+
+                <div class="form-actions form-group-full">
+                  <button type="submit" class="btn btn-primary">Guardar movimento</button>
+                  <button type="button" id="inventory-move-reset-btn" class="btn btn-secondary">Limpar</button>
+                </div>
+              </form>
+            </div>
+          </article>
+        </section>
+
+        <article class="panel">
+          <div class="panel-header panel-header-inline">
+            <h3>Stock atual</h3>
+
+            <div class="toolbar">
+              <input
+                type="text"
+                id="inventory-search"
+                class="search-input"
+                placeholder="Pesquisar item..."
+              />
+            </div>
+          </div>
+
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Item</th>
+                  <th>Unidade</th>
+                  <th>Descrição</th>
+                  <th>Stock</th>
+                </tr>
+              </thead>
+              <tbody id="inventory-stock-body">
+                <tr>
+                  <td colspan="4" class="empty-cell">A carregar inventário...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </article>
+
+      </main>
+    </div>
+  </div>
+
+  <script type="module" src="./assets/js/core/app.js"></script>
 </body>
 </html>
