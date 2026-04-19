@@ -1,6 +1,7 @@
 import { supabase } from "../config/supabase.js";
 
 import { initDashboardPage } from "../modules/dashboard.js";
+import { initExpensesPage } from "../modules/despesas.js";
 import { initStudentsPage } from "../modules/alunos.js";
 import { initCoursesPage } from "../modules/cursos.js";
 import { initTurmasPage } from "../modules/turmas.js";
@@ -79,6 +80,8 @@ async function initApp() {
 
   // 🔥 ROUTER SEGURO
   if (path.includes("dashboard.html")) return safeInit(initDashboardPage);
+  
+  if (path.includes("despesas.html")) return safeInit(initExpensesPage);
 
   if (path.includes("alunos.html")) return safeInit(initStudentsPage);
 
