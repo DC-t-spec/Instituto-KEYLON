@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>KEYLON | Despesas</title>
+
+  <link rel="stylesheet" href="./assets/css/tokens.css" />
+  <link rel="stylesheet" href="./assets/css/base.css" />
+  <link rel="stylesheet" href="./assets/css/layout.css" />
+  <link rel="stylesheet" href="./assets/css/components.css" />
+</head>
+
+<body>
+  <div class="app-shell">
+
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <span class="brand-badge">KEYLON</span>
+        <h2>Instituto</h2>
+      </div>
+
+      <nav class="sidebar-nav">
+        <a href="./dashboard.html" class="nav-link">Dashboard</a>
+        <a href="./alunos.html" class="nav-link">Alunos</a>
+        <a href="./cursos.html" class="nav-link">Cursos</a>
+        <a href="./turmas.html" class="nav-link">Turmas</a>
+        <a href="./cobrancas.html" class="nav-link">Cobranças</a>
+        <a href="./pagamentos.html" class="nav-link">Pagamentos</a>
+        <a href="./dividas.html" class="nav-link">Dívidas</a>
+        <a href="./despesas.html" class="nav-link active">Despesas</a>
+      </nav>
+
+      <button id="logout-btn" class="btn btn-ghost sidebar-logout">
+        Terminar sessão
+      </button>
+    </aside>
+
+    <div class="app-main">
+      <div id="mobile-backdrop" class="mobile-backdrop"></div>
+
+      <header class="topbar">
+        <div>
+          <h1>Despesas</h1>
+          <p class="page-subtitle">Controlo de gastos e custos operacionais</p>
+        </div>
+
+        <div class="topbar-actions">
+          <button id="menu-toggle" class="menu-toggle" type="button">☰ Menu</button>
+
+          <div class="topbar-user">
+            <span id="user-name">Utilizador</span>
+          </div>
+        </div>
+      </header>
+
+      <main class="page-content">
+
+        <section class="stats-grid">
+          <div class="stat-card">
+            <span class="stat-label">Total de despesas</span>
+            <strong class="stat-value" id="expenses-count">0</strong>
+          </div>
+
+          <div class="stat-card">
+            <span class="stat-label">Valor total</span>
+            <strong class="stat-value" id="expenses-total">0</strong>
+          </div>
+
+          <div class="stat-card">
+            <span class="stat-label">Este mês</span>
+            <strong class="stat-value" id="expenses-this-month">0</strong>
+          </div>
+
+          <div class="stat-card stat-card-highlight">
+            <span class="stat-label">Categorias usadas</span>
+            <strong class="stat-value" id="expenses-categories">0</strong>
+          </div>
+        </section>
+
+        <section class="split-layout">
+          <article class="panel">
+            <div class="panel-header">
+              <h3 id="expense-form-title">Nova despesa</h3>
+            </div>
+
+            <div class="panel-body">
+              <form id="expense-form" class="form-grid">
+                <input type="hidden" id="expense-id" />
+
+                <div class="form-group">
+                  <label for="expense-item">Item</label>
+                  <input id="expense-item" type="text" required />
+                </div>
+
+                <div class="form-group">
+                  <label for="expense-category">Categoria</label>
+                  <select id="expense-category">
+                    <option value="">Selecionar</option>
+                    <option value="material">Material</option>
+                    <option value="salario">Salário</option>
+                    <option value="operacional">Operacional</option>
+                    <option value="internet">Internet</option>
+                    <option value="energia">Energia</option>
+                    <option value="agua">Água</option>
+                    <option value="transporte">Transporte</option>
+                    <option value="manutencao">Manutenção</option>
+                    <option value="outro">Outro</option>
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <label for="expense-qty">Quantidade</label>
+                  <input id="expense-qty" type="number" min="0" step="0.01" value="1" />
+                </div>
+
+                <div class="form-group">
+                  <label for="expense-price">Preço unitário</label>
+                  <input id="expense-price" type="number" min="0" step="0.01" value="0" />
+                </div>
+
+                <div class="form-group">
+                  <label for="expense-total">Total pago</label>
+                  <input id="expense-total" type="number" min="0" step="0.01" required />
+                </div>
+
+                <div class="form-group">
+                  <label for="expense-date">Data</label>
+                  <input id="expense-date" type="date" />
+                </div>
+
+                <div class="form-group form-group-full">
+                  <label for="expense-notes">Observações</label>
+                  <textarea id="expense-notes" rows="3"></textarea>
+                </div>
+
+                <div class="form-actions form-group-full">
+                  <button type="submit" class="btn btn-primary">Guardar despesa</button>
+                  <button type="button" id="expense-reset-btn" class="btn btn-secondary">Limpar</button>
+                </div>
+              </form>
+            </div>
+          </article>
+
+          <article class="panel">
+            <div class="panel-header panel-header-inline">
+              <h3>Lista de despesas</h3>
+
+              <div class="toolbar">
+                <input
+                  type="text"
+                  id="expense-search"
+                  placeholder="Pesquisar item ou categoria"
+                  class="search-input"
+                />
+
+                <select id="expense-category-filter">
+                  <option value="">Categoria</option>
+                  <option value="material">Material</option>
+                  <option value="salario">Salário</option>
+                  <option value="operacional">Operacional</option>
+                  <option value="internet">Internet</option>
+                  <option value="energia">Energia</option>
+                  <option value="agua">Água</option>
+                  <option value="transporte">Transporte</option>
+                  <option value="manutencao">Manutenção</option>
+                  <option value="outro">Outro</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="table-wrap">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Item</th>
+                    <th>Categoria</th>
+                    <th>Qtd</th>
+                    <th>Preço unit.</th>
+                    <th>Total</th>
+                    <th>Data</th>
+                    <th>Ações</th>
+                  </tr>
+                </thead>
+
+                <tbody id="expensesTableBody">
+                  <tr>
+                    <td colspan="7" class="empty-cell">A carregar despesas...</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </article>
+        </section>
+
+      </main>
+    </div>
+  </div>
+
+  <script type="module" src="./assets/js/core/app.js"></script>
+</body>
+</html>
