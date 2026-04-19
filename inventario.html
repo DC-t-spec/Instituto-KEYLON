@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8" />
+  <title>Inventário</title>
+
+  <link rel="stylesheet" href="./assets/css/base.css" />
+  <link rel="stylesheet" href="./assets/css/layout.css" />
+  <link rel="stylesheet" href="./assets/css/components.css" />
+</head>
+
+<body>
+<div class="app-shell">
+
+<aside class="sidebar">
+  <nav class="sidebar-nav">
+    <a href="./dashboard.html">Dashboard</a>
+    <a href="./despesas.html">Despesas</a>
+    <a href="./inventario.html" class="active">Inventário</a>
+  </nav>
+</aside>
+
+<div class="app-main">
+
+<header class="topbar">
+  <h1>Inventário</h1>
+</header>
+
+<main class="page-content">
+
+<section class="split-layout">
+
+<!-- ITEM -->
+<article class="panel">
+<h3>Novo item</h3>
+
+<form id="item-form">
+<input id="item-name" placeholder="Nome (Marcador, Papel...)" required />
+<input id="item-unit" placeholder="Unidade" />
+<textarea id="item-desc" placeholder="Descrição"></textarea>
+
+<button type="submit">Guardar</button>
+</form>
+</article>
+
+<!-- MOVIMENTO -->
+<article class="panel">
+<h3>Movimento</h3>
+
+<form id="move-form">
+
+<select id="move-item"></select>
+
+<select id="move-type">
+<option value="in">Entrada</option>
+<option value="out">Saída</option>
+</select>
+
+<input id="move-qty" type="number" placeholder="Quantidade" required />
+
+<input id="move-reason" placeholder="Motivo" />
+
+<button type="submit">Guardar</button>
+</form>
+</article>
+
+</section>
+
+<!-- TABELA -->
+<article class="panel">
+<h3>Stock atual</h3>
+
+<table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Stock</th>
+</tr>
+</thead>
+
+<tbody id="stock-body"></tbody>
+</table>
+
+</article>
+
+</main>
+</div>
+</div>
+
+<script type="module" src="./assets/js/modules/inventario.js"></script>
+</body>
+</html>
