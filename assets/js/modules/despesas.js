@@ -177,6 +177,56 @@ async function fetchExpenses() {
   renderTable();
 }
 
+async function ensureInventoryItem(itemName) {
+  const { data: existing, error: existingError } = await supabase
+    .from("inventory_items")
+    .select("id")
+    .eq("name", itemName)
+    .maybeSingle();
+
+  if (existingError) {
+    console.error("Erro ao procurar item no inventário:", existingError);
+    return null;
+  }
+
+  if (existing?.id) return existing.id;
+
+  const { data: created, error: createError } = await supabase
+    .from("inventory_items")
+    .insert([{ name: itemName, unit: "unidade" }])
+    .select("id")
+    .single();
+
+  if (createError) {
+    console.error("Erro ao criar item no inventário:", createError);
+    return null;
+  }
+
+  return created?.id || null;
+}
+
+async function createInventoryEntryFromExpense(expenseId, itemName, quantity) {
+  const itemId = await ensureInventoryItem(itemName);
+  if (!itemId) return;
+
+  const qty = Number(quantity || 0);
+  if (qty <= 0) return;
+
+  const { error } = await supabase
+    .from("inventory_movements")
+    .insert([{
+      item_id: itemId,
+      type: "in",
+      quantity: qty,
+      reason: "Entrada automática por despesa",
+      reference: `expense:${expenseId}`
+    }]);
+
+  if (error) {
+    console.error("Erro ao criar movimento automático de inventário:", error);
+  }
+}
+
 async function saveExpense(event) {
   event.preventDefault();
 
@@ -209,6 +259,7 @@ async function saveExpense(event) {
   };
 
   let error = null;
+  let savedRow = null;
 
   if (state.editingId) {
     ({ error } = await supabase
@@ -216,15 +267,24 @@ async function saveExpense(event) {
       .update(payload)
       .eq("id", state.editingId));
   } else {
-    ({ error } = await supabase
+    const response = await supabase
       .from("expenses")
-      .insert([payload]));
+      .insert([payload])
+      .select("*")
+      .single();
+
+    error = response.error;
+    savedRow = response.data;
   }
 
   if (error) {
     console.error("Erro ao guardar despesa:", error);
     alert(error.message || "Erro ao guardar despesa.");
     return;
+  }
+
+  if (!state.editingId && category === "material") {
+    await createInventoryEntryFromExpense(savedRow?.id, item, quantity || 1);
   }
 
   clearForm();
@@ -259,14 +319,14 @@ function bindEvents() {
   el("expense-qty")?.addEventListener("input", recalcTotal);
   el("expense-price")?.addEventListener("input", recalcTotal);
 
-  el("expense-search")?.addEventListener("input", async (event) => {
+  el("expense-search")?.addEventListener("input", (event) => {
     state.filters.search = event.target.value || "";
     applyFilters();
     renderStats();
     renderTable();
   });
 
-  el("expense-category-filter")?.addEventListener("change", async (event) => {
+  el("expense-category-filter")?.addEventListener("change", (event) => {
     state.filters.category = event.target.value || "";
     applyFilters();
     renderStats();
