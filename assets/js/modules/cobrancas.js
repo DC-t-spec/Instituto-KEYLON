@@ -2,9 +2,11 @@ import { supabase } from "../config/supabase.js";
 
 const chargesState = {
   charges: [],
+  paymentTotalsByChargeId: {},
   students: [],
   classes: [],
   selectedCharge: null,
+  lastFetchToken: 0,
   filters: {
     search: "",
     month: "",
@@ -19,6 +21,11 @@ function formatMoney(value) {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2
   }).format(Number(value || 0));
+}
+
+function normalizeNumber(value) {
+  const numericValue = Number(value || 0);
+  return Number.isFinite(numericValue) ? numericValue : 0;
 }
 
 function el(id) {
@@ -153,6 +160,9 @@ function populateYearFilter() {
 }
 
 async function fetchCharges() {
+  const fetchToken = Date.now();
+  chargesState.lastFetchToken = fetchToken;
+
   let query = supabase
     .from("student_charges")
     .select(`
@@ -211,13 +221,45 @@ async function fetchCharges() {
   if (error) {
     console.error("Erro ao carregar cobranças:", error);
     chargesState.charges = [];
+    chargesState.paymentTotalsByChargeId = {};
     return [];
   }
 
-  let result = (data || []).map((item) => ({
-    ...item,
-    balance: Number(item.final_amount || 0) - Number(item.paid_amount || 0)
-  }));
+  const charges = Array.isArray(data) ? data : [];
+  const chargeIds = charges.map((item) => item?.id).filter(Boolean);
+  let paymentTotalsByChargeId = {};
+
+  if (chargeIds.length) {
+    const { data: payments, error: paymentsError } = await supabase
+      .from("payments")
+      .select("id, charge_id, amount")
+      .in("charge_id", chargeIds);
+
+    if (paymentsError) {
+      console.error("Erro ao carregar pagamentos para cobranças:", paymentsError);
+    } else {
+      paymentTotalsByChargeId = (payments || []).reduce((acc, payment) => {
+        const chargeId = payment?.charge_id;
+        if (!chargeId) return acc;
+        acc[chargeId] = normalizeNumber(acc[chargeId]) + normalizeNumber(payment.amount);
+        return acc;
+      }, {});
+
+      console.log("[finance-debug] payments", payments || []);
+    }
+  }
+
+  let result = charges.map((item) => {
+    const totalExpected = normalizeNumber(item.final_amount ?? item.amount);
+    const totalPaid = normalizeNumber(paymentTotalsByChargeId[item.id]);
+    const totalDebt = totalExpected - totalPaid;
+
+    return {
+      ...item,
+      paid_amount: totalPaid,
+      balance: totalDebt
+    };
+  });
 
   if (chargesState.filters.search.trim()) {
     const term = chargesState.filters.search.trim().toLowerCase();
@@ -241,15 +283,23 @@ async function fetchCharges() {
     });
   }
 
+  if (chargesState.lastFetchToken !== fetchToken) {
+    return chargesState.charges;
+  }
+
+  console.log("[finance-debug] charges", charges);
   chargesState.charges = result;
+  chargesState.paymentTotalsByChargeId = paymentTotalsByChargeId;
   return result;
 }
 
 function computeDashboard(charges = []) {
-  const totalExpected = charges.reduce((sum, item) => sum + Number(item.final_amount || 0), 0);
-  const totalPaid = charges.reduce((sum, item) => sum + Number(item.paid_amount || 0), 0);
-  const totalDebt = charges.reduce((sum, item) => sum + Number(item.balance || 0), 0);
+  const totalExpected = charges.reduce((sum, item) => sum + normalizeNumber(item.final_amount ?? item.amount), 0);
+  const totalPaid = charges.reduce((sum, item) => sum + normalizeNumber(item.paid_amount), 0);
+  const totalDebt = totalExpected - totalPaid;
   const paidCount = charges.filter((item) => item.status === "paid").length;
+
+  console.log("[finance-debug] totals", { totalExpected, totalPaid, totalDebt });
 
   return {
     totalExpected,
@@ -257,6 +307,31 @@ function computeDashboard(charges = []) {
     totalDebt,
     paidCount
   };
+}
+
+function runFinancialValidationScenarios() {
+  const scenarios = [
+    { name: "1 charge 250 / 1 payment 150", charges: [250], payments: [150], expectedDebt: 100 },
+    { name: "1 charge 250 / 2 payments 100+50", charges: [250], payments: [100, 50], expectedDebt: 100 },
+    { name: "2 charges 100+200 / 1 payment 150", charges: [100, 200], payments: [150], expectedDebt: 150 },
+    { name: "no payments", charges: [250], payments: [], expectedDebt: 250 },
+    { name: "no charges", charges: [], payments: [], expectedDebt: 0 }
+  ];
+
+  scenarios.forEach((scenario) => {
+    const totalExpected = scenario.charges.reduce((sum, value) => sum + normalizeNumber(value), 0);
+    const totalPaid = scenario.payments.reduce((sum, value) => sum + normalizeNumber(value), 0);
+    const totalDebt = totalExpected - totalPaid;
+    const isValid = totalDebt === scenario.expectedDebt;
+    console.log("[finance-debug] validation", {
+      scenario: scenario.name,
+      totalExpected,
+      totalPaid,
+      totalDebt,
+      expectedDebt: scenario.expectedDebt,
+      valid: isValid
+    });
+  });
 }
 
 function renderDashboardCards() {
@@ -454,7 +529,7 @@ async function registerPayment({ chargeId, amount, paymentDate, method, referenc
     throw new Error("Cobrança não encontrada.");
   }
 
-  const currentBalance = Number(charge.balance || 0);
+  const currentBalance = normalizeNumber(charge.balance);
   if (numericAmount > currentBalance) {
     throw new Error("O valor não pode ser superior ao saldo da cobrança.");
   }
@@ -658,6 +733,7 @@ function bindPaymentModal() {
 }
 
 export async function initChargesPage() {
+  runFinancialValidationScenarios();
   populateYearFilter();
   await fetchStudentsForCharges();
   await fetchClassesForBulk();
