@@ -102,8 +102,33 @@
           </div>
 
           <div class="stat-card stat-card-highlight">
-            <span class="stat-label">Recebido este mês</span>
-            <strong id="received-this-month" class="stat-value">--</strong>
+            <span class="stat-label">Receita total</span>
+            <strong id="total-revenue" class="stat-value">--</strong>
+          </div>
+
+          <div class="stat-card stat-card-highlight">
+            <span class="stat-label">Despesa total</span>
+            <strong id="total-expenses" class="stat-value">--</strong>
+          </div>
+
+          <div class="stat-card stat-card-highlight">
+            <span class="stat-label">Saldo líquido</span>
+            <strong id="net-balance" class="stat-value">--</strong>
+          </div>
+
+          <div class="stat-card">
+            <span class="stat-label">Receita este mês</span>
+            <strong id="revenue-this-month" class="stat-value">--</strong>
+          </div>
+
+          <div class="stat-card">
+            <span class="stat-label">Despesa este mês</span>
+            <strong id="expenses-this-month" class="stat-value">--</strong>
+          </div>
+
+          <div class="stat-card">
+            <span class="stat-label">Saldo do mês</span>
+            <strong id="net-this-month" class="stat-value">--</strong>
           </div>
         </section>
 
@@ -159,6 +184,35 @@
               </table>
             </div>
           </article>
+
+          <article class="panel">
+            <div class="panel-header">
+              <div>
+                <h3>Saldos por conta</h3>
+                <p id="balance-method-note" class="page-subtitle">A carregar...</p>
+              </div>
+            </div>
+
+            <div class="table-wrap">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Método / Conta</th>
+                    <th>Entradas</th>
+                    <th>Saídas</th>
+                    <th>Saldo</th>
+                  </tr>
+                </thead>
+
+                <tbody id="balance-by-method-body">
+                  <tr>
+                    <td colspan="4" class="empty-cell">A carregar...</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </article>
+
 
         </section>
 

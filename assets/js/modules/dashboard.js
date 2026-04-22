@@ -14,6 +14,27 @@ function normalizeNumber(value) {
   return Number.isFinite(amount) ? amount : 0;
 }
 
+function normalizeMethod(value) {
+  const method = String(value || "").trim().toLowerCase();
+  return method || "unknown";
+}
+
+function getPaymentMethod(payment) {
+  return normalizeMethod(payment?.method ?? payment?.payment_method);
+}
+
+function getExpenseAmount(expense) {
+  return normalizeNumber(expense?.total_amount ?? expense?.amount);
+}
+
+function getExpenseDate(expense) {
+  return expense?.expense_date ?? expense?.date ?? expense?.created_at ?? "";
+}
+
+function getExpenseMethod(expense) {
+  return normalizeMethod(expense?.payment_method ?? expense?.method ?? expense?.account_method ?? expense?.account_type);
+}
+
 function setText(id, value) {
   const el = document.getElementById(id);
   if (el) el.textContent = value;
@@ -73,6 +94,33 @@ function renderOverdue(rows) {
     .join("");
 }
 
+function renderBalancesByMethod(rows) {
+  const tbody = document.getElementById("balance-by-method-body");
+  if (!tbody) return;
+
+  if (!rows?.length) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="4" class="empty-cell">Sem dados por conta/método.</td>
+      </tr>
+    `;
+    return;
+  }
+
+  tbody.innerHTML = rows
+    .map(
+      (row) => `
+        <tr>
+          <td>${row.method}</td>
+          <td>${formatCurrency(row.incoming)}</td>
+          <td>${formatCurrency(row.outgoing)}</td>
+          <td>${formatCurrency(row.balance)}</td>
+        </tr>
+      `
+    )
+    .join("");
+}
+
 function getChargeExpectedAmount(charge) {
   return normalizeNumber(charge?.final_amount ?? charge?.amount);
 }
@@ -86,6 +134,35 @@ function aggregatePaymentsByChargeId(payments = []) {
   }, {});
 }
 
+function aggregateBalanceByMethod(payments = [], expenses = []) {
+  const byMethod = {};
+
+  payments.forEach((payment) => {
+    const method = getPaymentMethod(payment);
+    if (!byMethod[method]) {
+      byMethod[method] = { method, incoming: 0, outgoing: 0, balance: 0 };
+    }
+    byMethod[method].incoming += normalizeNumber(payment?.amount);
+  });
+
+  expenses.forEach((expense) => {
+    const method = getExpenseMethod(expense);
+    if (!byMethod[method]) {
+      byMethod[method] = { method, incoming: 0, outgoing: 0, balance: 0 };
+    }
+    byMethod[method].outgoing += getExpenseAmount(expense);
+  });
+
+  return Object.values(byMethod)
+    .map((row) => ({
+      ...row,
+      incoming: normalizeNumber(row.incoming),
+      outgoing: normalizeNumber(row.outgoing),
+      balance: normalizeNumber(row.incoming) - normalizeNumber(row.outgoing),
+    }))
+    .sort((a, b) => b.balance - a.balance);
+}
+
 async function loadDashboardData() {
   const today = new Date().toISOString().split("T")[0];
   const currentMonth = today.slice(0, 7);
@@ -95,7 +172,8 @@ async function loadDashboardData() {
     classesResult,
     coursesResult,
     chargesResult,
-    paymentsResult
+    paymentsResult,
+    expensesResult,
   ] = await Promise.all([
     supabase.from("students").select(`
       id,
@@ -114,7 +192,8 @@ async function loadDashboardData() {
     supabase.from("classes").select("id, status"),
     supabase.from("courses").select("id, status"),
     supabase.from("student_charges").select("id, student_id, title, due_date, amount, final_amount"),
-    supabase.from("payments").select("id, student_id, charge_id, amount, payment_date")
+    supabase.from("payments").select("id, student_id, charge_id, amount, payment_date, method, payment_method"),
+    supabase.from("expenses").select("*")
   ]);
 
   const firstError = [studentsResult, classesResult, coursesResult, chargesResult, paymentsResult]
@@ -125,21 +204,23 @@ async function loadDashboardData() {
     return;
   }
 
+  if (expensesResult.error) {
+    console.error("Erro ao carregar despesas no dashboard:", expensesResult.error.message || expensesResult.error);
+  }
+
   const students = studentsResult.data || [];
   const classes = classesResult.data || [];
   const courses = coursesResult.data || [];
   const charges = chargesResult.data || [];
   const payments = paymentsResult.data || [];
+  const expenses = expensesResult.data || [];
   const paymentTotalsByChargeId = aggregatePaymentsByChargeId(payments);
 
-  console.log("[finance-debug] charges", charges);
-  console.log("[finance-debug] payments", payments);
-
   const totalExpected = charges.reduce((sum, charge) => sum + getChargeExpectedAmount(charge), 0);
-  const totalPaid = payments.reduce((sum, payment) => sum + normalizeNumber(payment.amount), 0);
-  const totalDebt = totalExpected - totalPaid;
-
-  console.log("[finance-debug] totals", { totalExpected, totalPaid, totalDebt });
+  const totalRevenue = payments.reduce((sum, payment) => sum + normalizeNumber(payment.amount), 0);
+  const totalExpenses = expenses.reduce((sum, expense) => sum + getExpenseAmount(expense), 0);
+  const totalDebt = totalExpected - totalRevenue;
+  const netBalance = totalRevenue - totalExpenses;
 
   setText("total-students", students.length);
   setText("active-students", students.filter((student) => student.status === "active").length);
@@ -149,10 +230,34 @@ async function loadDashboardData() {
   setText("active-courses", courses.filter((item) => item.status === "active").length);
   setText("total-debt", formatCurrency(totalDebt));
 
-  const receivedThisMonth = payments
-    .filter((payment) => (payment.payment_date || "").startsWith(currentMonth))
+  const revenueThisMonth = payments
+    .filter((payment) => String(payment.payment_date || "").startsWith(currentMonth))
     .reduce((sum, payment) => sum + normalizeNumber(payment.amount), 0);
-  setText("received-this-month", formatCurrency(receivedThisMonth));
+
+  const expensesThisMonth = expenses
+    .filter((expense) => String(getExpenseDate(expense)).startsWith(currentMonth))
+    .reduce((sum, expense) => sum + getExpenseAmount(expense), 0);
+
+  const netThisMonth = revenueThisMonth - expensesThisMonth;
+
+  setText("total-revenue", formatCurrency(totalRevenue));
+  setText("total-expenses", formatCurrency(totalExpenses));
+  setText("net-balance", formatCurrency(netBalance));
+  setText("revenue-this-month", formatCurrency(revenueThisMonth));
+  setText("expenses-this-month", formatCurrency(expensesThisMonth));
+  setText("net-this-month", formatCurrency(netThisMonth));
+
+  const balancesByMethod = aggregateBalanceByMethod(payments, expenses);
+  renderBalancesByMethod(balancesByMethod);
+
+  const unknownExpenseCount = expenses.filter((expense) => getExpenseMethod(expense) === "unknown").length;
+
+  setText(
+    "balance-method-note",
+    unknownExpenseCount > 0
+      ? `${unknownExpenseCount} despesa(s) sem payment_method canónico: agrupadas em 'unknown'.`
+      : "Entradas e saídas agrupadas por método/conta."
+  );
 
   const studentRows = loadTopDebtorsFromRaw(students, charges, paymentTotalsByChargeId);
   renderTopDebtors(studentRows);

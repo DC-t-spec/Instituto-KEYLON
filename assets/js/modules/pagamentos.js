@@ -30,7 +30,9 @@ function getChargeTypeLabel(type) {
 function getMethodLabel(method) {
   if (method === "cash") return "Dinheiro";
   if (method === "mpesa") return "M-Pesa";
+  if (method === "emola") return "e-Mola";
   if (method === "bank") return "Banco";
+  if (method === "bank_transfer") return "Transferência bancária";
   if (method === "card") return "Cartão";
   return method || "-";
 }

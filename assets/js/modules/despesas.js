@@ -21,6 +21,26 @@ function formatMoney(value) {
   }).format(Number(value || 0));
 }
 
+function normalizeMethod(value) {
+  const method = String(value || "").trim().toLowerCase();
+  return method || "unknown";
+}
+
+function getExpenseMethod(item) {
+  return normalizeMethod(item?.payment_method ?? item?.method ?? item?.account_method ?? item?.account_type);
+}
+
+function getMethodLabel(method) {
+  if (method === "cash") return "Dinheiro";
+  if (method === "mpesa") return "M-Pesa";
+  if (method === "emola") return "e-Mola";
+  if (method === "bank") return "Banco";
+  if (method === "bank_transfer") return "Transferência bancária";
+  if (method === "card") return "Cartão";
+  if (method === "unknown") return "Desconhecido";
+  return method || "-";
+}
+
 function clearForm() {
   state.editingId = null;
 
@@ -31,6 +51,7 @@ function clearForm() {
   if (el("expense-price")) el("expense-price").value = "0";
   if (el("expense-total")) el("expense-total").value = "";
   if (el("expense-date")) el("expense-date").value = new Date().toISOString().split("T")[0];
+  if (el("expense-payment-method")) el("expense-payment-method").value = "";
   if (el("expense-notes")) el("expense-notes").value = "";
 
   const title = el("expense-form-title");
@@ -47,6 +68,7 @@ function fillForm(item) {
   if (el("expense-price")) el("expense-price").value = item.unit_price ?? 0;
   if (el("expense-total")) el("expense-total").value = item.total_amount ?? 0;
   if (el("expense-date")) el("expense-date").value = item.expense_date || "";
+  if (el("expense-payment-method")) el("expense-payment-method").value = getExpenseMethod(item) === "unknown" ? "" : getExpenseMethod(item);
   if (el("expense-notes")) el("expense-notes").value = item.notes || "";
 
   const title = el("expense-form-title");
@@ -119,7 +141,7 @@ function renderTable() {
   if (!state.filtered.length) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="7" class="empty-cell">Nenhuma despesa encontrada.</td>
+        <td colspan="8" class="empty-cell">Nenhuma despesa encontrada.</td>
       </tr>
     `;
     return;
@@ -133,6 +155,7 @@ function renderTable() {
       <td>${formatMoney(item.unit_price)}</td>
       <td>${formatMoney(item.total_amount)}</td>
       <td>${item.expense_date || "-"}</td>
+      <td>${getMethodLabel(getExpenseMethod(item))}</td>
       <td>
         <button
           type="button"
@@ -236,6 +259,7 @@ async function saveExpense(event) {
   const unitPrice = Number(el("expense-price")?.value || 0);
   const totalAmount = Number(el("expense-total")?.value || 0);
   const expenseDate = el("expense-date")?.value || null;
+  const paymentMethod = normalizeMethod(el("expense-payment-method")?.value || "");
   const notes = el("expense-notes")?.value?.trim() || null;
 
   if (!item) {
@@ -248,6 +272,11 @@ async function saveExpense(event) {
     return;
   }
 
+  if (paymentMethod === "unknown") {
+    alert("Selecione a conta/método de pagamento da despesa.");
+    return;
+  }
+
   const payload = {
     item,
     category,
@@ -255,6 +284,7 @@ async function saveExpense(event) {
     unit_price: unitPrice,
     total_amount: totalAmount,
     expense_date: expenseDate,
+    payment_method: paymentMethod,
     notes
   };
 
