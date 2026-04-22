@@ -131,6 +131,18 @@
                   <input id="expense-date" type="date" />
                 </div>
 
+                <div class="form-group">
+                  <label for="expense-payment-method">Conta / método</label>
+                  <select id="expense-payment-method" required>
+                    <option value="">Selecionar</option>
+                    <option value="cash">Dinheiro</option>
+                    <option value="bank">Banco</option>
+                    <option value="mpesa">M-Pesa</option>
+                    <option value="emola">e-Mola</option>
+                    <option value="card">Cartão</option>
+                  </select>
+                </div>
+
                 <div class="form-group form-group-full">
                   <label for="expense-notes">Observações</label>
                   <textarea id="expense-notes" rows="3"></textarea>
@@ -181,13 +193,14 @@
                     <th>Preço unit.</th>
                     <th>Total</th>
                     <th>Data</th>
+                    <th>Método</th>
                     <th>Ações</th>
                   </tr>
                 </thead>
 
                 <tbody id="expensesTableBody">
                   <tr>
-                    <td colspan="7" class="empty-cell">A carregar despesas...</td>
+                    <td colspan="8" class="empty-cell">A carregar despesas...</td>
                   </tr>
                 </tbody>
               </table>
